@@ -22,6 +22,7 @@ public class BenchmarkTests : MonoBehaviour
 		BitpackBytesUnEven();
 	}
 
+
 	public static void ByteForByteWrite()
 	{
 		var watch = System.Diagnostics.Stopwatch.StartNew();
