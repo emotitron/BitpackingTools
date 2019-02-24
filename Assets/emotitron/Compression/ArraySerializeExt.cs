@@ -34,6 +34,8 @@ namespace emotitron.Compression
 	/// </summary>
 	public static class ArraySerializeExt
 	{
+		private const string bufferOverrunMsg = "Byte buffer overrun. Dataloss will occur.";
+
 		#region Obsolete Writers
 
 		[System.Obsolete("Argument order has changed.")]
@@ -100,15 +102,13 @@ namespace emotitron.Compression
 		/// <returns></returns>
 		public static byte[] Write(this byte[] buffer, ByteConverter value, ref int bitposition, int bits)
 		{
-			
 			const int MAXBITS = 8;
 			int offset = -(bitposition % MAXBITS);
 			int index = bitposition / MAXBITS;
 			int endpos = bitposition + bits;
-			//int endindex = (endpos % MAXBITS == 0) ? endpos / MAXBITS - 1 : endpos / MAXBITS;
 			int endindex = ((endpos - 1) >> 3);
 
-			System.Diagnostics.Debug.Assert((endindex < buffer.Length), "Buffer byte[] too is short. You are attempting a write to index " + endindex + ", but the byte[] buffer length is only " + buffer.Length + ".");
+			System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
 
 			// Offset both the mask and the compressed value using the remainder as the offset
 			ulong mask = ulong.MaxValue >> (64 - bits);
@@ -133,6 +133,7 @@ namespace emotitron.Compression
 			}
 
 			bitposition += bits;
+
 			return buffer;
 		}
 
@@ -152,11 +153,10 @@ namespace emotitron.Compression
 			int offset = -(bitposition % MAXBITS);
 			int index = bitposition / MAXBITS;
 			int endpos = bitposition + bits;
-			//int endindex = (endpos % MAXBITS == 0) ? endpos / MAXBITS - 1 : endpos / MAXBITS;
 			int endindex = ((endpos - 1) >> 3);
 
-			System.Diagnostics.Debug.Assert((allowResize || endindex < buffer.Length), "Buffer byte[] too is short. You are attempting a write to index " + endindex + ", but the byte[] buffer length is only " + buffer.Length + ".");
-
+			System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
+			
 			if (allowResize && endindex >= buffer.Length)
 				System.Array.Resize(ref buffer, buffer.Length * 2);
 
@@ -239,7 +239,6 @@ namespace emotitron.Compression
 			int offset = -(bitposition % MAXBITS);
 			int index = bitposition / MAXBITS;
 			int endpos = bitposition + bits;
-			//int endindex = (endpos % MAXBITS == 0) ? endpos / MAXBITS - 1 : endpos / MAXBITS;
 			int endindex = ((endpos - 1) >> 5);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
@@ -247,7 +246,7 @@ namespace emotitron.Compression
 			ulong offsetmask = mask << -offset;
 			ulong offsetval = (ulong)value << -offset;
 
-			System.Diagnostics.Debug.Assert((endindex < buffer.Length), "Buffer uint[] too is short. You are attempting a write to index " + endindex + ", but the uint[] buffer length is only " + buffer.Length + ".");
+			System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
 
 			while (true)
 			{
@@ -275,7 +274,6 @@ namespace emotitron.Compression
 			int offset = -(bitposition % MAXBITS);
 			int index = bitposition / MAXBITS;
 			int endpos = bitposition + bits;
-			//int endindex = (endpos % MAXBITS == 0) ? endpos / MAXBITS - 1 : endpos / MAXBITS;
 			int endindex = ((endpos - 1) >> 6);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
@@ -285,8 +283,8 @@ namespace emotitron.Compression
 
 			//DebugX.LogError("Buffer ulong[] too is short. You are attempting a write to index " + endindex + ", but the ulong[] buffer length is only " + buffer.Length + ".", endindex >= buffer.Length, true);
 
-			System.Diagnostics.Debug.Assert((endindex < buffer.Length), "Buffer ulong[] too is short. You are attempting a write to index " + endindex + ", but the ulong[] buffer length is only " + buffer.Length + ".");
-
+			System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
+			
 			while (true)
 			{
 				// set the unwritten bits in byte[] to zero as a safety
@@ -395,11 +393,10 @@ namespace emotitron.Compression
 			int offset = -(bitposition % MAXBITS);
 			int index = bitposition / MAXBITS;
 			int endpos = bitposition + bits;
-			//int endindex = (endpos % MAXBITS == 0) ? endpos / MAXBITS - 1 : endpos / MAXBITS;
 			int endindex = ((endpos - 1) >> 3);
 
-			System.Diagnostics.Debug.Assert((endindex < buffer.Length), "Buffer byte[] too is short. You are attempting a read from index " + endindex + ", but the byte[] buffer length is only " + buffer.Length + ".");
-
+			System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
+			
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong line = ((ulong)buffer[index] >> -offset);
 			ulong value = 0;
@@ -434,11 +431,10 @@ namespace emotitron.Compression
 			int offset = -(bitposition % MAXBITS);
 			int index = bitposition / MAXBITS;
 			int endpos = bitposition + bits;
-			//int endindex = (endpos % MAXBITS == 0) ? endpos / MAXBITS - 1 : endpos / MAXBITS;
 			int endindex = ((endpos - 1) >> 5);
 
-			System.Diagnostics.Debug.Assert((endindex < buffer.Length), "Buffer uint[] too is short. You are attempting a read from index " + endindex + ", but the uint[] buffer length is only " + buffer.Length + ".");
-
+			System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
+			
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong line = ((ulong)buffer[index] >> -offset);
 			ulong value = 0;
@@ -472,11 +468,10 @@ namespace emotitron.Compression
 			int offset = -(bitposition % MAXBITS);
 			int index = bitposition / MAXBITS;
 			int endpos = bitposition + bits;
-			//int endindex = (endpos % MAXBITS == 0) ? endpos / MAXBITS - 1 : endpos / MAXBITS;
 			int endindex = ((endpos - 1) >> 6);
 
-			System.Diagnostics.Debug.Assert((endindex < buffer.Length), "Buffer ulong[] too is short. You are attempting a read from index " + endindex + ", but the ulong[] buffer length is only " + buffer.Length + ".");
-
+			System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
+			
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong line = ((ulong)buffer[index] >> -offset);
 			ulong value = 0;
