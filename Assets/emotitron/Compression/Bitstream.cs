@@ -48,7 +48,7 @@ namespace emotitron.Compression
 		/// <param name="bs"></param>
 		public static implicit operator ulong(Bitstream bs)
 		{
-				return bs.fragments[0];
+			return bs.fragments[0];
 		}
 		/// <summary>
 		/// Implicit conversion of Bitstream to uint extracts just the first 32 bits of the first fragment.
@@ -103,6 +103,7 @@ namespace emotitron.Compression
 		{
 			_readPtr = 0;
 		}
+		
 		/// <summary>
 		/// Reset the bitstream to an empty state.
 		/// </summary>
@@ -201,9 +202,8 @@ namespace emotitron.Compression
 		#region Constructors
 
 		// Constructor
-		public unsafe Bitstream(ulong fragment0, ulong fragment1 = 0, ulong fragment2 = 0, ulong fragment3 = 0, uint fragment4 = 0) : this()
+		public unsafe Bitstream(ulong fragment0, ulong fragment1 = 0, ulong fragment2 = 0, ulong fragment3 = 0, ulong fragment4 = 0) : this()
 		{
-			// TODO: This constructor doesn't set the WritePtr... should it?
 			fixed (ulong* ulongPtr = fragments)
 			{
 				ulongPtr[0] = fragment0;
@@ -211,7 +211,12 @@ namespace emotitron.Compression
 				ulongPtr[2] = fragment2;
 				ulongPtr[3] = fragment3;
 				ulongPtr[4] = fragment4;
+
+				UnityEngine.Debug.Log("cons" + ulongPtr[0]);
+
 			}
+			_writePtr = 40 * 8;
+
 		}
 
 		// Constructor
@@ -227,6 +232,7 @@ namespace emotitron.Compression
 		{
 			fixed (ulong* ulongPtr = fragments)
 				ulongPtr[0] = A;
+
 			_writePtr = aBits;
 
 			Write(B, bBits);
@@ -234,16 +240,16 @@ namespace emotitron.Compression
 
 		}
 
-		// Constructor
-		public unsafe Bitstream(PackedValue a, PackedValue b, PackedValue c) : this()
-		{
-			fixed (ulong* ulongPtr = fragments)
-				ulongPtr[0] = a;
-			_writePtr = a.bits;
+		//// Constructor
+		//public unsafe Bitstream(PackedValue a, PackedValue b, PackedValue c) : this()
+		//{
+		//	fixed (ulong* ulongPtr = fragments)
+		//		ulongPtr[0] = a;
+		//	_writePtr = a.bits;
 
-			Write(b.uint64, b.bits);
-			Write(c.uint64, c.bits);
-		}
+		//	Write(b.uint64, b.bits);
+		//	Write(c.uint64, c.bits);
+		//}
 
 		// Constructor
 		public unsafe Bitstream(byte[] bytes) : this()
@@ -343,6 +349,7 @@ namespace emotitron.Compression
 		/// <param name="src"></param>
 		public void Write(Bitstream src)
 		{
+
 			int bits = src._writePtr;
 			{
 				if (bits > 0)
@@ -435,6 +442,7 @@ namespace emotitron.Compression
 		//	}
 		//}
 
+		private const string bufferoverrunerr = "Bitstream write would exceed index limitation of 5 ulongs (40 bytes). Aborting write. Data corruption very likely.";
 		/// <summary>
 		/// The primary write method. All other write methods lead to this one.
 		/// </summary>
@@ -442,10 +450,10 @@ namespace emotitron.Compression
 		/// <param name="bits">Number of lower order bits to write.</param>
 		public void Write(ulong value, int bits)
 		{
-			int index = _writePtr / 64;
+			int index = _writePtr >> 6;
 			int offset = _writePtr % 64;
 			int endpos = _writePtr + bits;
-			int endindex = (endpos % 64 == 0) ? endpos / 64 - 1 : endpos / 64;
+			int endindex = ((endpos - 1) >> 6);
 
 			_writePtr += bits;
 
@@ -453,8 +461,7 @@ namespace emotitron.Compression
 
 			bool overrun = endindex >= 5;
 
-			System.Diagnostics.Debug.Assert(!overrun,
-				"Bitstream write would exceed index limitation of 5 ulongs (40 bytes). Aborting write. Data corruption very likely.");
+			System.Diagnostics.Debug.Assert(!overrun, bufferoverrunerr);
 
 			if (overrun)
 				return;
@@ -606,7 +613,7 @@ namespace emotitron.Compression
 		public void WriteULong(ulong value, int bits = 64) { Write(value, bits); }
 
 		public void WriteBool(bool value) { Write((value ? (ulong)1 : 0), 1); }
-		public void Write(PackedValue pv) { Write(pv.uint64, pv.bits); }
+		//public void Write(PackedValue pv) { Write(pv.uint64, pv.bits); }
 
 
 		///// <summary>
@@ -637,10 +644,11 @@ namespace emotitron.Compression
 		/// <returns></returns>
 		public unsafe ulong Read(int bits)
 		{
+			int index = _readPtr >> 6;
 			int offset = _readPtr % 64;
-			int index = _readPtr / 64;
 			int endpos = _readPtr + bits;
-			int endindex = (endpos % 64 == 0) ? endpos / 64 - 1 : endpos / 64;
+			int endindex = ((endpos - 1) >> 6);
+
 			_readPtr += bits;
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
@@ -675,22 +683,25 @@ namespace emotitron.Compression
 		{
 			int remainingbits = _writePtr;
 			int index = 0;
-			while (remainingbits > 0)
-			{
-				ulong frag = this[index];
-				for (int i = 0; i < 64; i += 8)
-				{
-					int bits = remainingbits > 8 ? 8 : remainingbits;
-					target.Write(frag >> i, ref bitposition, bits);
-					remainingbits -= bits;
 
-					if (remainingbits == 0)
-						return;
+			fixed (ulong* ulongPtr = fragments)
+			{
+				while (remainingbits > 0)
+				{
+					ulong frag = ulongPtr[index];
+					for (int i = 0; i < 64; i += 8)
+					{
+						int bits = remainingbits > 8 ? 8 : remainingbits;
+						target.Write(frag >> i, ref bitposition, bits);
+						remainingbits -= bits;
+
+						if (remainingbits == 0)
+							return;
+					}
+					index++;
 				}
-				index++;
 			}
 		}
-
 
 		/// <summary>
 		/// Read this entire bitstream (from bit 0 to the current writePtr position) to the supplied byte[].
@@ -703,7 +714,6 @@ namespace emotitron.Compression
 			ReadOut(target, ref bitsused);
 			return bitsused;
 		}
-
 
 		/// <summary>
 		/// Extracts out the 5 fixed ulong fragments that are backing the Bistream.
@@ -781,54 +791,94 @@ namespace emotitron.Compression
 			}
 		}
 
+		
+		[System.Obsolete("Just use Equals(). If you must use Compare, use the ref overload.")]
+		public static bool Compare(Bitstream a, Bitstream b)
+		{
+			{
+				if (a[0] == b[0] &&
+					a[1] == b[1] &&
+					a[2] == b[2] &&
+					a[3] == b[3] &&
+					a[4] == b[4])
+					return true;
+
+				return false;
+			}
+		}
+
+		///// <summary>
+		///// When possible, use Compare(ref Bitstream a, ref Bitstream b). Bitstream is a 40byte struct, so it is best to pass by ref when possible.
+		///// </summary>
+		///// <returns>true if the bitstreams match.</returns>
+		//public static bool Compare(ref Bitstream a, ref Bitstream b)
+		//{
+
+		//	fixed (ulong* aPtr = a.fragments)
+		//	fixed (ulong* bPtr = b.fragments)
+		//	{
+		//		if (aPtr[0] == bPtr[0] &&
+		//			aPtr[1] == bPtr[1] &&
+		//			aPtr[2] == bPtr[2] &&
+		//			aPtr[3] == bPtr[3] &&
+		//			aPtr[4] == bPtr[4])
+		//			return true;
+
+		//		return false;
+		//	}
+		//}
+
+
 		/// <summary>
 		/// When possible, use Compare(ref Bitstream a, ref Bitstream b). Bitstream is a 40byte struct, so it is best to pass by ref when possible.
 		/// </summary>
 		/// <returns>true if the bitstreams match.</returns>
-		public static bool Compare(Bitstream a, Bitstream b)
-		{
-			Bitstream aPtr = a;
-			Bitstream bPtr = b;
-			{
-				if (aPtr[0] != bPtr[0] ||
-					aPtr[1] != bPtr[1] ||
-					aPtr[2] != bPtr[2] ||
-					aPtr[3] != bPtr[3] ||
-					aPtr[4] != bPtr[4])
-					return false;
-
-				return true;
-			}
-		}
-		
-		[System.Obsolete("Just use Equals().")]
 		public static bool Compare(ref Bitstream a, ref Bitstream b)
 		{
+			if (a._writePtr != b._writePtr)
+				return false;
 
 			fixed (ulong* aPtr = a.fragments)
 			fixed (ulong* bPtr = b.fragments)
 			{
-				if (aPtr[0] != bPtr[0] ||
-					aPtr[1] != bPtr[1] ||
-					aPtr[2] != bPtr[2] ||
-					aPtr[3] != bPtr[3] ||
-					aPtr[4] != bPtr[4])
-					return false;
+				if (aPtr[0] == bPtr[0] &&
+					aPtr[1] == bPtr[1] &&
+					aPtr[2] == bPtr[2] &&
+					aPtr[3] == bPtr[3] &&
+					aPtr[4] == bPtr[4])
+					return true;
 
-				return true;
+				return false;
 			}
 		}
 
-		public override string ToString()
-		{
-			return "CompositeBuffer <b>len:" + WritePtr + "</b> [frag0: " + this[0] + " frag1: " + this[1] + " frag2: " + this[2] + " frag3: " + this[3] + " frag4: " + this[4] + "]";
-		}
-
+		[System.Obsolete("Use the ref overload. This version boxes the struct, and these structs are big and should be handled more like classes.")]
 		public override bool Equals(object obj)
 		{
 			return obj is Bitstream && Equals((Bitstream)obj);
 		}
 
+		public bool EqualsNew(ref Bitstream other)
+		{
+			if (_writePtr != other._writePtr)
+				return false;
+
+			fixed (ulong* aPtr = fragments)
+			fixed (ulong* bPtr = other.fragments)
+			{
+				if (
+					aPtr[0] == bPtr[0] &&
+					aPtr[1] == bPtr[1] &&
+					aPtr[2] == bPtr[2] &&
+					aPtr[3] == bPtr[3] &&
+					aPtr[4] == bPtr[4])
+					return true;
+
+				return false;
+			}
+		}
+
+		[System.Obsolete("Use the ref overload. These structs are big and should be handled more like classes.")]
 		public bool Equals(Bitstream other)
 		{
 			if (_writePtr == other._writePtr &&
@@ -857,150 +907,11 @@ namespace emotitron.Compression
 			
 			return hashCode;
 		}
+
+		public override string ToString()
+		{
+			return "CompositeBuffer <b>len:" + WritePtr + "</b> [frag0: " + this[0] + " frag1: " + this[1] + " frag2: " + this[2] + " frag3: " + this[3] + " frag4: " + this[4] + "]";
+		}
 	}
-
-	/// <summary>
-	/// A simple wrapper for unsigned ints, which also contains how many bits that value is packed down to.
-	/// </summary>
-	[StructLayout(LayoutKind.Explicit)]
-	public struct PackedValue
-	{
-		[FieldOffset(0)]
-		public System.Byte int8;
-		[FieldOffset(0)]
-		public System.SByte uint8;
-		[FieldOffset(0)]
-		public System.Int16 int16;
-		[FieldOffset(0)]
-		public System.UInt16 uint16;
-		[FieldOffset(0)]
-		public System.Int32 int32;
-		[FieldOffset(0)]
-		public System.UInt32 uint32;
-		[FieldOffset(0)]
-		public System.Int64 int64;
-		[FieldOffset(0)]
-		public System.UInt64 uint64;
-		[FieldOffset(0)]
-		public System.Single float32;
-		[FieldOffset(0)]
-		public System.Double float64;
-		[FieldOffset(0)]
-		public System.Boolean boolean;
-		[FieldOffset(0)]
-		public System.Char character;
-
-		[FieldOffset(8)]
-		public int bits;
-
-		public PackedValue(System.Byte int8, int bits = 8) : this()
-		{
-			this.int8 = int8;
-			this.bits = bits;
-		}
-		public PackedValue(System.SByte uint8, int bits = 8) : this()
-		{
-			this.uint8 = uint8;
-			this.bits = bits;
-		}
-		public PackedValue(System.Int16 int16, int bits = 16) : this()
-		{
-			this.int16 = int16;
-			this.bits = bits;
-		}
-		public PackedValue(System.UInt16 uint16, int bits = 16) : this()
-		{
-			this.uint16 = uint16;
-			this.bits = bits;
-		}
-		public PackedValue(System.Int32 int32, int bits = 32) : this()
-		{
-			this.int32 = int32;
-			this.bits = bits;
-		}
-		public PackedValue(System.UInt32 uint32, int bits = 32) : this()
-		{
-			this.uint32 = uint32;
-			this.bits = bits;
-		}
-		public PackedValue(System.Int64 int64, int bits = 64) : this()
-		{
-			this.int64 = int64;
-			this.bits = bits;
-		}
-		public PackedValue(System.UInt64 uint64, int bits = 64) : this()
-		{
-			this.uint64 = uint64;
-			this.bits = bits;
-		}
-		public PackedValue(System.Single float32) : this()
-		{
-			this.float32 = float32;
-			this.bits = 32;
-		}
-		public PackedValue(System.Double float64) : this()
-		{
-			this.float64 = float64;
-			this.bits = 64;
-		}
-		public PackedValue(System.Boolean boolean) : this()
-		{
-			this.boolean = boolean;
-			this.bits = 1;
-		}
-		public PackedValue(System.Char character, int bits = 16) : this()
-		{
-			this.character = character;
-			this.bits = bits;
-		}
-
-		
-		public static implicit operator System.Byte(PackedValue pv) { return pv.int8; }
-		public static implicit operator System.SByte(PackedValue pv) { return pv.uint8; }
-
-		public static implicit operator System.Int16(PackedValue pv) { return pv.int16; }
-		public static implicit operator System.UInt16(PackedValue pv) { return pv.uint16; }
-
-		public static implicit operator System.Int32(PackedValue pv) { return pv.int32; }
-		public static implicit operator System.UInt32(PackedValue pv) { return pv.uint32; }
-
-		public static implicit operator System.Int64(PackedValue pv) { return pv.int64; }
-		public static implicit operator System.UInt64(PackedValue pv) { return pv.uint64; }
-
-		public static implicit operator System.Single(PackedValue pv) { return pv.float32; }
-		public static implicit operator System.Double(PackedValue pv) { return pv.float64; }
-
-		public static implicit operator System.Boolean(PackedValue pv) { return pv.boolean; }
-		public static implicit operator System.Char(PackedValue pv) { return pv.character; }
-
-	}
-
-
-	//public static class BitstreamExtensions
-	//{
-	//	/// <summary>
-	//	/// Write the used bytes (based on the writer position) to the NetworkWriter.
-	//	/// </summary>
-	//	public static void Write(this UnityEngine.Networking.NetworkWriter writer, ref Bitstream bitstream)
-	//	{
-	//		// Write the packed bytes from the bitstream into the UNET writer.
-	//		int count = bitstream.BytesUsed;
-	//		for (int i = 0; i < count; ++i)
-	//		{
-	//			writer.Write(bitstream.ReadByte());
-	//		}
-	//	}
-
-	//	public static void Read(this UnityEngine.Networking.NetworkReader reader, ref Bitstream bitstream)
-	//	{
-	//		// Copy the reader into our buffer so we can extra the packed bits. UNET uses a byte reader so we can't directly read bit fragments out of it.
-	//		int count = System.Math.Min(40, reader.Length);
-	//		for (int i = (int)reader.Position; i < count; ++i)
-	//		{
-	//			byte by = reader.ReadByte();
-	//			bitstream.WriteByte(by);
-	//		}
-	//	}
-	//}
 }
 

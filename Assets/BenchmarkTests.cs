@@ -5,14 +5,14 @@ using emotitron.Compression;
 
 public class BenchmarkTests : MonoBehaviour
 {
-	public const int BYTE_CNT = 1024;
-	public const int LOOP = 1000;
+	public const int BYTE_CNT = 40;
+	public const int LOOP = 10000;
 	public static byte[] buffer = new byte[BYTE_CNT];
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 	static void Test()
 	{
-		Debug.Log("Testing " + BYTE_CNT * LOOP + " Byte Read/Writes");
+		Debug.Log("Testing <b>" + BYTE_CNT * LOOP + "</b> Byte Read/Writes");
 
 		ByteForByteWrite();
 		BitpackBytesEven();
@@ -20,7 +20,53 @@ public class BenchmarkTests : MonoBehaviour
 		ByteForByteWrite();
 		BitpackBytesEven();
 		BitpackBytesUnEven();
+
+		BitstreamTest();
+		BitstreamIndirectTest();
+
+		Debug.Log("--------");
+		//ResetBitstreamTest();
+		//ResetBitstreamTest();
+
 	}
+
+	private static Bitstream bs = new Bitstream((ulong)222, (ulong)222, (ulong)222, (ulong)222, (uint)222);
+
+	//public static void ResetBitstreamTest()
+	//{
+	//	Debug.Log("bs: " + bs[0] + " " + bs[1] + bs[2] + " " + bs[3] + " " + bs[4]);
+
+	//	int count = 100000;
+	//	var watch = System.Diagnostics.Stopwatch.StartNew();
+
+	//	Debug.Log("bs len: " + bs.WritePtr);
+
+
+	//	for (int i = 0; i < count; ++i)
+	//	{
+	//		int pos = 0;
+	//		bs.ReadOut(buffer, ref pos);
+	//	}
+
+	//	watch.Stop();
+	//	Debug.Log("Reset <b>old</b> =" + watch.ElapsedMilliseconds + " ms");
+	//	Debug.Log(buffer[0] + " " + buffer[1] + buffer[2] + " " + buffer[3] + " " + buffer[4] + " " + buffer[5] + " " + buffer[6] + " " + buffer[7] + " " + buffer[8] + " " + buffer[9]
+	//		+ " " + buffer[10] + " " + buffer[11] + " " + buffer[12] + " " + buffer[13]);
+
+	//	var watch2 = System.Diagnostics.Stopwatch.StartNew();
+
+	//	for (int i = 0; i < count; ++i)
+	//	{
+	//		int pos2 = 0;
+	//		bs.ReadOutNew(buffer, ref pos2);
+	//	}
+
+	//	watch2.Stop();
+
+	//	Debug.Log("Reset <b>new</b> =" + watch2.ElapsedMilliseconds + " ms");
+	//	Debug.Log(buffer[0] + " " + buffer[1] + buffer[2] + " " + buffer[3] + " " + buffer[4] + " " + buffer[5] + " " + buffer[6] + " " + buffer[7] + " " + buffer[8] + " " + buffer[9]
+	//		+ " " + buffer[10] + " " + buffer[11] + " " + buffer[12] + " " + buffer[13]);
+	//}
 
 
 	public static void ByteForByteWrite()
@@ -51,6 +97,8 @@ public class BenchmarkTests : MonoBehaviour
 
 		for (int loop = 0; loop < LOOP; ++loop)
 		{
+			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
+			/// forcing worst case split across two byte[] indexs
 			int bitpos = 0;
 			for (int i = 0; i < BYTE_CNT; ++i)
 				buffer.Write(255, ref bitpos, 8);
@@ -67,6 +115,66 @@ public class BenchmarkTests : MonoBehaviour
 		Debug.Log("Even Bitpack byte: time=" + watch.ElapsedMilliseconds + " ms");
 	}
 
+
+	public static void BitstreamTest()
+	{
+		var watch = System.Diagnostics.Stopwatch.StartNew();
+
+		for (int loop = 0; loop < LOOP; ++loop)
+		{
+
+			bs.Reset();
+
+			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
+			/// forcing worst case split across two byte[] indexs
+			bs.WriteBool(true);
+
+			for (int i = 0; i < 40 - 1; ++i)
+				bs.Write(255, 8);
+
+			bool ob = bs.ReadBool();
+
+			for (int i = 0; i < 40 - 1; ++i)
+			{
+				byte b = (byte)bs.Read(8);
+			}
+		}
+
+		watch.Stop();
+
+		Debug.Log("Unsafe Bitstream: time=" + watch.ElapsedMilliseconds + " ms");
+	}
+
+	public static void BitstreamIndirectTest()
+	{
+		var watch = System.Diagnostics.Stopwatch.StartNew();
+
+		for (int loop = 0; loop < LOOP; ++loop)
+		{
+
+			bs.Reset();
+			
+			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
+			/// forcing worst case split across two byte[] indexs
+			bs.WriteBool(true);
+
+			for (int i = 0; i < 40 - 1; ++i)
+				bs.WriteByte(255);
+
+			bool ob = bs.ReadBool();
+
+			for (int i = 0; i < 40 - 1; ++i)
+			{
+				byte b = bs.ReadByte();
+			}
+		}
+
+		watch.Stop();
+
+		Debug.Log("Unsafe Bitstream w/ Indirect Calls: time=" + watch.ElapsedMilliseconds + " ms");
+	}
+
+
 	public static void BitpackBytesUnEven()
 	{
 		var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -74,6 +182,9 @@ public class BenchmarkTests : MonoBehaviour
 		for (int loop = 0; loop < LOOP; ++loop)
 		{
 			int bitpos = 0;
+
+			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
+			/// forcing worst case split across two byte[] indexs
 			buffer.Write(1, ref bitpos, 1);
 
 			for (int i = 0; i < BYTE_CNT - 1; ++i)
