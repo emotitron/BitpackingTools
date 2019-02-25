@@ -7,7 +7,7 @@ namespace emotitron.Compression
 {
 	public unsafe interface IFixedBuffer
 	{
-		
+
 	};
 
 	public unsafe struct Buffer1024 : IFixedBuffer
@@ -19,6 +19,7 @@ namespace emotitron.Compression
 	{
 		public fixed ulong fragments[5];
 	}
+
 
 	/// <summary>
 	/// An unsafe-bitpacker (up to 1024 bytes) used for bitpacking. Contains methods for basic serialization.
@@ -35,15 +36,20 @@ namespace emotitron.Compression
 		private int _writePtr;
 		[FieldOffset(4)]
 		private int _readPtr;
-		
+
 		/// <summary>
-		/// The number of fixed ulong fragments acting as the backing array for the Bitstream struct.
+		/// The backing unsafe fixed array that dictates the actual size.
 		/// </summary>
-		//public const int ULONG_COUNT = 128;
 		[FieldOffset(8)]
-		private T fixedBuffer;
+		private readonly T _fixedBuffer;
+
+		/// <summary>
+		/// The exposed unsafe buffer.
+		/// </summary>
 		[FieldOffset(8)]
-		private fixed ulong fragments[128];
+		private fixed ulong fragments[1];
+
+		#region Properties
 
 		/// <summary>
 		/// The current bit position for writes to this bitstream. The next write will begin at this bit.
@@ -81,6 +87,8 @@ namespace emotitron.Compression
 			_readPtr = 0;
 		}
 
+		#endregion
+
 		/// <summary>
 		/// Reset the bitstream to an empty state.
 		/// </summary>
@@ -98,6 +106,20 @@ namespace emotitron.Compression
 		}
 
 		#region Constructors
+
+		//Constructor
+		public unsafe Bitstream(ulong fragment0, ulong fragment1 = 0, ulong fragment2 = 0, ulong fragment3 = 0, ulong fragment4 = 0) : this()
+		{
+			fixed (ulong* ulongPtr = fragments)
+			{
+				ulongPtr[0] = fragment0;
+				ulongPtr[1] = fragment1;
+				ulongPtr[2] = fragment2;
+				ulongPtr[3] = fragment3;
+				ulongPtr[4] = fragment4;
+			}
+			_writePtr = 40 * 8;
+		}
 
 		// Constructor
 		public unsafe Bitstream(byte[] bytes) : this()
@@ -204,13 +226,19 @@ namespace emotitron.Compression
 		{
 			get
 			{
-				fixed (ulong* ulongPtr = fragments)
-				{
-					if (i < BufferULongCount)
+				if (i < BufferULongCount)
+					fixed (ulong* ulongPtr = fragments)
 						return ulongPtr[i];
-					else
-						return 0;
-				}
+				else
+					return 0;
+			}
+			set
+			{
+				if (i < BufferULongCount)
+					fixed (ulong* ulongPtr = fragments)
+						ulongPtr[i] = value;
+				else
+					Debug.LogError("Attempt to access invalid index.");
 			}
 		}
 
@@ -402,7 +430,7 @@ namespace emotitron.Compression
 		public void WriteBool(bool value) { Write((value ? (ulong)1 : 0), 1); }
 
 		public byte ReadByte(int bits = 8) { return (byte)Read(bits); }
-		public ushort ReadShort(int bits = 16) { return (ushort)Read(bits); }
+		public ushort ReadUShort(int bits = 16) { return (ushort)Read(bits); }
 		public uint ReadUint32(int bits = 32) { return (uint)Read(bits); }
 		public ulong ReadUInt64(int bits = 64) { return Read(bits); }
 		public bool ReadBool() { return (Read(1) == 1); }
@@ -533,6 +561,5 @@ namespace emotitron.Compression
 #endif
 
 	}
-
 }
 
