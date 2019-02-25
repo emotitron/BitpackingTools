@@ -349,7 +349,24 @@ namespace emotitron.Compression
 		}
 
 		public void WriteByte(byte value, int bits = 8) { Write(value, bits); }
-		public void WriteSByte(sbyte value, int bits = 8) { Write((ulong)value, bits); }
+		public void WriteSByte(sbyte value, int bits = 8)
+		{
+			if (value < 0)
+			{
+				/// Max Negative special case
+				int maxneg = (1 << (bits - 1));
+				if (-value == maxneg)
+					Write((ulong)maxneg, bits);
+				
+				/// Negative
+				else
+					Write((ulong)((-value << 1) | 1), bits);
+			}
+			else
+				/// Positive
+				Write((ulong)(value << 1), bits);
+		}
+
 		public void WriteUShort(ushort value, int bits = 16) { Write(value, bits); }
 		public void WriteShort(short value, int bits = 16) { Write((ulong)value, bits); }
 		public void WriteUInt(uint value, int bits = 32) { Write(value, bits); }
@@ -358,6 +375,24 @@ namespace emotitron.Compression
 		public void WriteBool(bool value) { Write((value ? (ulong)1 : 0), 1); }
 
 		public byte ReadByte(int bits = 8) { return (byte)Read(bits); }
+		public sbyte ReadSByte(int bits = 8)
+		{
+			byte b = (byte)Read(bits);
+
+			if ((b & 1) == 0)
+			{
+				/// Max Negative special case
+				int maxneg = (1 << (bits - 1));
+				if (b == maxneg)
+					return (sbyte)(-maxneg);
+
+				/// Positive
+				return (sbyte)(b >> 1);
+			}
+			/// Negative
+			return (sbyte)(-(b >> 1));
+		}
+
 		public ushort ReadShort(int bits = 16) { return (ushort)Read(bits); }
 		public uint ReadUint32(int bits = 32) { return (uint)Read(bits); }
 		public ulong ReadUInt64(int bits = 64) { return Read(bits); }

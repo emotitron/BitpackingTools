@@ -8,11 +8,22 @@ public class BenchmarkTests : MonoBehaviour
 	public const int BYTE_CNT = 40;
 	public const int LOOP = 10000;
 	public static byte[] buffer = new byte[BYTE_CNT];
+	private static Bitstream bs = new Bitstream((ulong)222, (ulong)222, (ulong)222, (ulong)222, (uint)222);
+	private static Bitstream1024 bs1024 = new Bitstream1024();
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 	static void Test()
 	{
 		Debug.Log("Testing <b>" + BYTE_CNT * LOOP + "</b> Byte Read/Writes");
+
+		//bs1024.WriteSByte(-8, 4);
+		//bs1024.WriteSByte(-3, 4);
+		//bs1024.WriteSByte(0, 4);
+		//bs1024.WriteSByte(7, 4);
+		//bs1024.WriteSByte(8, 4);
+		//Debug.Log(" -8?  " + bs1024.ReadSByte(4) + "   -3?  " + bs1024.ReadSByte(4) 
+		//	+ "  0?  " + bs1024.ReadSByte(4) + "  7?  " + bs1024.ReadSByte(4) + "  8?  " + bs1024.ReadSByte(4));
+
 
 		ByteForByteWrite();
 		BitpackBytesEven();
@@ -30,7 +41,6 @@ public class BenchmarkTests : MonoBehaviour
 
 	}
 
-	private static Bitstream bs = new Bitstream((ulong)222, (ulong)222, (ulong)222, (ulong)222, (uint)222);
 
 	//public static void ResetBitstreamTest()
 	//{
