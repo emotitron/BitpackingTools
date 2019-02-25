@@ -6,136 +6,27 @@ using emotitron.Compression;
 public class BenchmarkTests : MonoBehaviour
 {
 	public const int BYTE_CNT = 40;
-	public const int LOOP = 1000000;
+	public const int LOOP = 10000;
 	public static byte[] buffer = new byte[BYTE_CNT];
-	private static Bitstream bs = new Bitstream((ulong)222, (ulong)222, (ulong)222, (ulong)222, (uint)222);
-	private static Bitstream1024 bs1024 = new Bitstream1024();
+	//private static Bitstream bs = new Bitstream((ulong)222, (ulong)222, (ulong)222, (ulong)222, (uint)222);
+	//private static Bitstream1024 bs1024 = new Bitstream1024();
+	private static Bitstream<Buffer1024> bsvar = new Bitstream<Buffer1024>();
+	private static Bitstream<Buffer40> bs40 = new Bitstream<Buffer40>();
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 	static void Test()
 	{
 		Debug.Log("Testing <b>" + BYTE_CNT * LOOP + "</b> Byte Read/Writes");
 
-		int bits = 8;
-		bs1024.WriteSigned(-128, bits);
-		bs1024.WriteSigned(-3, bits);
-		bs1024.WriteSigned(0, bits);
-		bs1024.WriteSigned(7, bits);
-		bs1024.WriteSigned(127, bits);
-		Debug.Log(" Min ?  " + bs1024.ReadSigned(bits) + "   -3?  " + bs1024.ReadSigned(bits) 
-			+ "  Zero ?  " + bs1024.ReadSigned(bits) + "  7?  " + bs1024.ReadSigned(bits) + "  Max ?  " + bs1024.ReadSigned(bits));
+		ByteForByteWrite();
+		BitpackBytesEven();
+		BitpackBytesUnEven();
 
-		//SByteWrite();
-		SByteNewWrite();
-
-		//ByteForByteWrite();
-		//BitpackBytesEven();
-		//BitpackBytesUnEven();
-		//ByteForByteWrite();
-		//BitpackBytesEven();
-		//BitpackBytesUnEven();
-
-		//BitstreamTest();
-		//BitstreamIndirectTest();
+		BitstreamTest();
+		BitstreamIndirectTest();
 
 		Debug.Log("--------");
-		//ResetBitstreamTest();
-		//ResetBitstreamTest();
-
 	}
-
-	//public static void SByteWrite()
-	//{
-	//	var watch = System.Diagnostics.Stopwatch.StartNew();
-	//	int bits = 5;
-
-	//	for (int loop = 0; loop < LOOP; ++loop)
-	//	{
-	//		bs1024.Reset();
-
-	//		bs1024.WriteSByte(-8, bits);
-	//		bs1024.WriteSByte(-3, bits);
-	//		bs1024.WriteSByte(0, bits);
-	//		bs1024.WriteSByte(7, bits);
-	//		bs1024.WriteSByte(8, bits);
-
-	//		sbyte s1 = bs1024.ReadSByte(bits);
-	//		sbyte s2 = bs1024.ReadSByte(bits);
-	//		sbyte s3 = bs1024.ReadSByte(bits);
-	//		sbyte s4 = bs1024.ReadSByte(bits);
-	//		sbyte s5 = bs1024.ReadSByte(bits);
-	//	}
-
-	//	watch.Stop();
-
-	//	Debug.Log("SByte Old: time=" + watch.ElapsedMilliseconds + " ms");
-	//}
-
-	public static void SByteNewWrite()
-	{
-		var watch = System.Diagnostics.Stopwatch.StartNew();
-		int bits = 5;
-
-		for (int loop = 0; loop < LOOP; ++loop)
-		{
-			bs1024.Reset();
-
-			bs1024.WriteSigned(-8, bits);
-			bs1024.WriteSigned(-3, bits);
-			bs1024.WriteSigned(0, bits);
-			bs1024.WriteSigned(7, bits);
-			bs1024.WriteSigned(8, bits);
-
-			sbyte s1 = (sbyte)bs1024.ReadSigned(bits);
-			sbyte s2 = (sbyte)bs1024.ReadSigned(bits);
-			sbyte s3 = (sbyte)bs1024.ReadSigned(bits);
-			sbyte s4 = (sbyte)bs1024.ReadSigned(bits);
-			sbyte s5 = (sbyte)bs1024.ReadSigned(bits);
-		}
-
-		watch.Stop();
-
-		Debug.Log("SByte New: time=" + watch.ElapsedMilliseconds + " ms");
-	}
-
-	
-
-	//public static void ResetBitstreamTest()
-	//{
-	//	Debug.Log("bs: " + bs[0] + " " + bs[1] + bs[2] + " " + bs[3] + " " + bs[4]);
-
-	//	int count = 100000;
-	//	var watch = System.Diagnostics.Stopwatch.StartNew();
-
-	//	Debug.Log("bs len: " + bs.WritePtr);
-
-
-	//	for (int i = 0; i < count; ++i)
-	//	{
-	//		int pos = 0;
-	//		bs.ReadOut(buffer, ref pos);
-	//	}
-
-	//	watch.Stop();
-	//	Debug.Log("Reset <b>old</b> =" + watch.ElapsedMilliseconds + " ms");
-	//	Debug.Log(buffer[0] + " " + buffer[1] + buffer[2] + " " + buffer[3] + " " + buffer[4] + " " + buffer[5] + " " + buffer[6] + " " + buffer[7] + " " + buffer[8] + " " + buffer[9]
-	//		+ " " + buffer[10] + " " + buffer[11] + " " + buffer[12] + " " + buffer[13]);
-
-	//	var watch2 = System.Diagnostics.Stopwatch.StartNew();
-
-	//	for (int i = 0; i < count; ++i)
-	//	{
-	//		int pos2 = 0;
-	//		bs.ReadOutNew(buffer, ref pos2);
-	//	}
-
-	//	watch2.Stop();
-
-	//	Debug.Log("Reset <b>new</b> =" + watch2.ElapsedMilliseconds + " ms");
-	//	Debug.Log(buffer[0] + " " + buffer[1] + buffer[2] + " " + buffer[3] + " " + buffer[4] + " " + buffer[5] + " " + buffer[6] + " " + buffer[7] + " " + buffer[8] + " " + buffer[9]
-	//		+ " " + buffer[10] + " " + buffer[11] + " " + buffer[12] + " " + buffer[13]);
-	//}
-
 
 	public static void ByteForByteWrite()
 	{
@@ -191,20 +82,20 @@ public class BenchmarkTests : MonoBehaviour
 		for (int loop = 0; loop < LOOP; ++loop)
 		{
 
-			bs.Reset();
+			bs40.Reset();
 
 			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
 			/// forcing worst case split across two byte[] indexs
-			bs.WriteBool(true);
+			bs40.WriteBool(true);
 
 			for (int i = 0; i < 40 - 1; ++i)
-				bs.Write(255, 8);
+				bs40.Write(255, 8);
 
-			bool ob = bs.ReadBool();
+			bool ob = bs40.ReadBool();
 
 			for (int i = 0; i < 40 - 1; ++i)
 			{
-				byte b = (byte)bs.Read(8);
+				byte b = (byte)bs40.Read(8);
 			}
 		}
 
@@ -220,20 +111,20 @@ public class BenchmarkTests : MonoBehaviour
 		for (int loop = 0; loop < LOOP; ++loop)
 		{
 
-			bs.Reset();
-			
+			bs40.Reset();
+
 			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
 			/// forcing worst case split across two byte[] indexs
-			bs.WriteBool(true);
+			bs40.WriteBool(true);
 
 			for (int i = 0; i < 40 - 1; ++i)
-				bs.WriteByte(255);
+				bs40.WriteByte(255);
 
-			bool ob = bs.ReadBool();
+			bool ob = bs40.ReadBool();
 
 			for (int i = 0; i < 40 - 1; ++i)
 			{
-				byte b = bs.ReadByte();
+				byte b = bs40.ReadByte();
 			}
 		}
 
@@ -241,7 +132,6 @@ public class BenchmarkTests : MonoBehaviour
 
 		Debug.Log("Unsafe Bitstream w/ Indirect Calls: time=" + watch.ElapsedMilliseconds + " ms");
 	}
-
 
 	public static void BitpackBytesUnEven()
 	{
@@ -273,7 +163,7 @@ public class BenchmarkTests : MonoBehaviour
 	}
 
 	static float interval = 0;
-	// Update is called once per frame
+
 	void Update()
 	{
 		interval += Time.deltaTime;
