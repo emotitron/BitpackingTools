@@ -6,7 +6,7 @@ using emotitron.Compression;
 public class BenchmarkTests : MonoBehaviour
 {
 	public const int BYTE_CNT = 40;
-	public const int LOOP = 10000;
+	public const int LOOP = 1000000;
 	public static byte[] buffer = new byte[BYTE_CNT];
 	private static Bitstream bs = new Bitstream((ulong)222, (ulong)222, (ulong)222, (ulong)222, (uint)222);
 	private static Bitstream1024 bs1024 = new Bitstream1024();
@@ -16,24 +16,27 @@ public class BenchmarkTests : MonoBehaviour
 	{
 		Debug.Log("Testing <b>" + BYTE_CNT * LOOP + "</b> Byte Read/Writes");
 
-		//bs1024.WriteSByte(-8, 4);
-		//bs1024.WriteSByte(-3, 4);
-		//bs1024.WriteSByte(0, 4);
-		//bs1024.WriteSByte(7, 4);
-		//bs1024.WriteSByte(8, 4);
-		//Debug.Log(" -8?  " + bs1024.ReadSByte(4) + "   -3?  " + bs1024.ReadSByte(4) 
-		//	+ "  0?  " + bs1024.ReadSByte(4) + "  7?  " + bs1024.ReadSByte(4) + "  8?  " + bs1024.ReadSByte(4));
+		int bits = 8;
+		bs1024.WriteSigned(-128, bits);
+		bs1024.WriteSigned(-3, bits);
+		bs1024.WriteSigned(0, bits);
+		bs1024.WriteSigned(7, bits);
+		bs1024.WriteSigned(127, bits);
+		Debug.Log(" Min ?  " + bs1024.ReadSigned(bits) + "   -3?  " + bs1024.ReadSigned(bits) 
+			+ "  Zero ?  " + bs1024.ReadSigned(bits) + "  7?  " + bs1024.ReadSigned(bits) + "  Max ?  " + bs1024.ReadSigned(bits));
 
+		//SByteWrite();
+		SByteNewWrite();
 
-		ByteForByteWrite();
-		BitpackBytesEven();
-		BitpackBytesUnEven();
-		ByteForByteWrite();
-		BitpackBytesEven();
-		BitpackBytesUnEven();
+		//ByteForByteWrite();
+		//BitpackBytesEven();
+		//BitpackBytesUnEven();
+		//ByteForByteWrite();
+		//BitpackBytesEven();
+		//BitpackBytesUnEven();
 
-		BitstreamTest();
-		BitstreamIndirectTest();
+		//BitstreamTest();
+		//BitstreamIndirectTest();
 
 		Debug.Log("--------");
 		//ResetBitstreamTest();
@@ -41,6 +44,61 @@ public class BenchmarkTests : MonoBehaviour
 
 	}
 
+	//public static void SByteWrite()
+	//{
+	//	var watch = System.Diagnostics.Stopwatch.StartNew();
+	//	int bits = 5;
+
+	//	for (int loop = 0; loop < LOOP; ++loop)
+	//	{
+	//		bs1024.Reset();
+
+	//		bs1024.WriteSByte(-8, bits);
+	//		bs1024.WriteSByte(-3, bits);
+	//		bs1024.WriteSByte(0, bits);
+	//		bs1024.WriteSByte(7, bits);
+	//		bs1024.WriteSByte(8, bits);
+
+	//		sbyte s1 = bs1024.ReadSByte(bits);
+	//		sbyte s2 = bs1024.ReadSByte(bits);
+	//		sbyte s3 = bs1024.ReadSByte(bits);
+	//		sbyte s4 = bs1024.ReadSByte(bits);
+	//		sbyte s5 = bs1024.ReadSByte(bits);
+	//	}
+
+	//	watch.Stop();
+
+	//	Debug.Log("SByte Old: time=" + watch.ElapsedMilliseconds + " ms");
+	//}
+
+	public static void SByteNewWrite()
+	{
+		var watch = System.Diagnostics.Stopwatch.StartNew();
+		int bits = 5;
+
+		for (int loop = 0; loop < LOOP; ++loop)
+		{
+			bs1024.Reset();
+
+			bs1024.WriteSigned(-8, bits);
+			bs1024.WriteSigned(-3, bits);
+			bs1024.WriteSigned(0, bits);
+			bs1024.WriteSigned(7, bits);
+			bs1024.WriteSigned(8, bits);
+
+			sbyte s1 = (sbyte)bs1024.ReadSigned(bits);
+			sbyte s2 = (sbyte)bs1024.ReadSigned(bits);
+			sbyte s3 = (sbyte)bs1024.ReadSigned(bits);
+			sbyte s4 = (sbyte)bs1024.ReadSigned(bits);
+			sbyte s5 = (sbyte)bs1024.ReadSigned(bits);
+		}
+
+		watch.Stop();
+
+		Debug.Log("SByte New: time=" + watch.ElapsedMilliseconds + " ms");
+	}
+
+	
 
 	//public static void ResetBitstreamTest()
 	//{

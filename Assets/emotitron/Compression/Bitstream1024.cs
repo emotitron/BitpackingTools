@@ -28,8 +28,43 @@ using System;
 namespace emotitron.Compression
 {
 
+	public interface IFixedBuffer
+	{
+		int ULongCount { get; }
+		int ByteCount { get; }
+		ulong this[int index] { get; set; }
+	};
+	public unsafe struct Buffer1024 : IFixedBuffer
+	{
+		public int ULongCount { get { return 128; } }
+		public int ByteCount { get { return 1024; } }
+		private fixed ulong fragments[1024];
+
+		public unsafe ulong this[int i]
+		{
+			get
+			{
+				{
+					if (i < 128)
+						fixed (ulong* ptr = fragments)
+							return ptr[i];
+					else
+						return 0;
+				}
+			}
+			set
+			{
+				if (i < 128)
+					fixed (ulong* ptr = fragments)
+						ptr[i] = value;
+				else
+					UnityEngine.Debug.LogError("Attempt to write to invalid fixed index.");
+			}
+		}
+	}
+
 	/// <summary>
-	/// A mini-bitpacker (up to 40 bytes) used for storing compressed transforms. Contains methods for basic Serialization.
+	/// An unsafe-bitpacker (up to 1024 bytes) used for bitpacking. Contains methods for basic Serialization.
 	/// </summary>
 	public unsafe struct Bitstream1024
 	{
@@ -279,6 +314,7 @@ namespace emotitron.Compression
 			}
 		}
 
+		#region Primary Read/Write Methods
 
 		private const string bufferoverrunerr = "Bitstream write would exceed index limitation of 5 ulongs (40 bytes). Aborting write. Data corruption very likely.";
 		/// <summary>
@@ -297,7 +333,7 @@ namespace emotitron.Compression
 
 			ulong offsetcomp = value << offset;
 
-			bool overrun = endindex >= 5;
+			bool overrun = endindex >= ULONG_COUNT;
 
 			System.Diagnostics.Debug.Assert(!overrun, bufferoverrunerr);
 
@@ -318,85 +354,6 @@ namespace emotitron.Compression
 			}
 		}
 
-		/// <summary>
-		/// Write the contents of a byte[] to this bitstream.
-		/// </summary>
-		/// <param name="src"></param>
-		/// <param name="bitcount">Number of bits to copy.</param>
-		public void WriteFromByteBuffer(byte[] src, int bitcount = -1)
-		{
-			if (bitcount == -1)
-				bitcount = src.Length * 8;
-
-			int i = 0;
-			while (bitcount > 0)
-			{
-				if (bitcount > 8)
-				{
-					Write(src[i], 8);
-					bitcount -= 8;
-				}
-				else
-				{
-					Write(src[i], bitcount);
-					break;
-				}
-
-				i++;
-				if (i == src.Length)
-					break;
-			}
-		}
-
-		public void WriteByte(byte value, int bits = 8) { Write(value, bits); }
-		public void WriteSByte(sbyte value, int bits = 8)
-		{
-			if (value < 0)
-			{
-				/// Max Negative special case
-				int maxneg = (1 << (bits - 1));
-				if (-value == maxneg)
-					Write((ulong)maxneg, bits);
-				
-				/// Negative
-				else
-					Write((ulong)((-value << 1) | 1), bits);
-			}
-			else
-				/// Positive
-				Write((ulong)(value << 1), bits);
-		}
-
-		public void WriteUShort(ushort value, int bits = 16) { Write(value, bits); }
-		public void WriteShort(short value, int bits = 16) { Write((ulong)value, bits); }
-		public void WriteUInt(uint value, int bits = 32) { Write(value, bits); }
-		public void WriteInt(int value, int bits = 32) { Write((ulong)value, bits); }
-		public void WriteULong(ulong value, int bits = 64) { Write(value, bits); }
-		public void WriteBool(bool value) { Write((value ? (ulong)1 : 0), 1); }
-
-		public byte ReadByte(int bits = 8) { return (byte)Read(bits); }
-		public sbyte ReadSByte(int bits = 8)
-		{
-			byte b = (byte)Read(bits);
-
-			if ((b & 1) == 0)
-			{
-				/// Max Negative special case
-				int maxneg = (1 << (bits - 1));
-				if (b == maxneg)
-					return (sbyte)(-maxneg);
-
-				/// Positive
-				return (sbyte)(b >> 1);
-			}
-			/// Negative
-			return (sbyte)(-(b >> 1));
-		}
-
-		public ushort ReadShort(int bits = 16) { return (ushort)Read(bits); }
-		public uint ReadUint32(int bits = 32) { return (uint)Read(bits); }
-		public ulong ReadUInt64(int bits = 64) { return Read(bits); }
-		public bool ReadBool() { return (Read(1) == 1); }
 
 		/// <summary>
 		/// The primary Read method. All other Read method overloads lead to this one.
@@ -434,6 +391,63 @@ namespace emotitron.Compression
 			value |= (line & mask);
 			return value;
 		}
+
+		#endregion
+
+		/// <summary>
+		/// Write the contents of a byte[] to this bitstream.
+		/// </summary>
+		/// <param name="src"></param>
+		/// <param name="bitcount">Number of bits to copy.</param>
+		public void WriteFromByteBuffer(byte[] src, int bitcount = -1)
+		{
+			if (bitcount == -1)
+				bitcount = src.Length * 8;
+
+			int i = 0;
+			while (bitcount > 0)
+			{
+				if (bitcount > 8)
+				{
+					Write(src[i], 8);
+					bitcount -= 8;
+				}
+				else
+				{
+					Write(src[i], bitcount);
+					break;
+				}
+
+				i++;
+				if (i == src.Length)
+					break;
+			}
+		}
+		
+		public void WriteByte(byte value, int bits = 8) { Write(value, bits); }
+		public void WriteUShort(ushort value, int bits = 16) { Write(value, bits); }
+		public void WriteUInt(uint value, int bits = 32) { Write(value, bits); }
+		public void WriteULong(ulong value, int bits = 64) { Write(value, bits); }
+		public void WriteBool(bool value) { Write((value ? (ulong)1 : 0), 1); }
+
+		public byte ReadByte(int bits = 8) { return (byte)Read(bits); }
+		public ushort ReadShort(int bits = 16) { return (ushort)Read(bits); }
+		public uint ReadUint32(int bits = 32) { return (uint)Read(bits); }
+		public ulong ReadUInt64(int bits = 64) { return Read(bits); }
+		public bool ReadBool() { return (Read(1) == 1); }
+
+		public void WriteSigned(int value, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Write(zigzag, bits);
+		}
+		public int ReadSigned(int bits)
+		{
+			uint value = (uint)Read(bits);
+			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+			return zagzig;
+		}
+
 
 		/// <summary>
 		/// Read this entire bitstream (from bit 0 to the current writePtr position) to the supplied byte[]. Bitposition will be incremented accordingly.

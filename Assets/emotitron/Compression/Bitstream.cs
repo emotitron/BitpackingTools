@@ -607,14 +607,24 @@ namespace emotitron.Compression
 		public void WriteByte(byte value, int bits = 8) { Write(value, bits); }
 		public void WriteSByte(sbyte value, int bits = 8) { Write((ulong)value, bits); }
 		public void WriteUShort(ushort value, int bits = 16) { Write(value, bits); }
-		public void WriteShort(short value, int bits = 16) { Write((ulong)value, bits); }
 		public void WriteUInt(uint value, int bits = 32) { Write(value, bits); }
-		public void WriteInt(int value, int bits = 32) { Write((ulong)value, bits); }
 		public void WriteULong(ulong value, int bits = 64) { Write(value, bits); }
 
 		public void WriteBool(bool value) { Write((value ? (ulong)1 : 0), 1); }
 		//public void Write(PackedValue pv) { Write(pv.uint64, pv.bits); }
 
+
+		public void WriteSigned(int value, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Write(zigzag, bits);
+		}
+		public int ReadSigned(int bits)
+		{
+			uint value = (uint)Read(bits);
+			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+			return zagzig;
+		}
 
 		///// <summary>
 		///// Write bitstream contents (rounded up to the nearest byte) UNET NetworkWriter.
@@ -632,7 +642,7 @@ namespace emotitron.Compression
 		//}
 
 		public byte ReadByte(int bits = 8) { return (byte)Read(bits); }
-		public ushort ReadShort(int bits = 16) { return (ushort)Read(bits); }
+		public ushort ReadUInt16(int bits = 16) { return (ushort)Read(bits); }
 		public uint ReadUint32(int bits = 32) { return (uint)Read(bits); }
 		public ulong ReadUInt64(int bits = 64) { return Read(bits); }
 		public bool ReadBool() { return (Read(1) == 1); }
