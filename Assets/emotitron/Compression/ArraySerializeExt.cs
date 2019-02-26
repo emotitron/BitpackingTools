@@ -36,40 +36,6 @@ namespace emotitron.Compression
 	{
 		private const string bufferOverrunMsg = "Byte buffer overrun. Dataloss will occur.";
 
-		#region Obsolete Writers
-
-		[System.Obsolete("Argument order has changed.")]
-		public static byte[] Write(this byte[] buffer, ulong value, int bits, ref int bitposition)
-		{
-			Write(buffer, value, ref bitposition, bits);
-			return buffer;
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static uint[] Write(this uint[] buffer, ulong value, int bits, ref int bitposition)
-		{
-			Write(buffer, value, ref bitposition, bits);
-			return buffer;
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static ulong[] Write(this ulong[] buffer, ulong value, int bits, ref int bitposition)
-		{
-			Write(buffer, value, ref bitposition, bits);
-			return buffer;
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static byte[] Write(this byte[] buffer, float value, ref int bitposition)
-		{
-			Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
-			return buffer;
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static float Read(this byte[] buffer, ref int bitposition)
-		{
-			return Read(buffer, ref bitposition, 32);
-		}
-
-		#endregion
-
 		#region Read/Write Signed Value
 
 		public static byte[] WriteSigned(this byte[] buffer, int value, ref int bitposition, int bits)
@@ -158,7 +124,7 @@ namespace emotitron.Compression
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 3);
 
-			System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
+			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
 
 			// Offset both the mask and the compressed value using the remainder as the offset
 			ulong mask = ulong.MaxValue >> (64 - bits);
@@ -188,6 +154,102 @@ namespace emotitron.Compression
 			return;
 		}
 
+		public unsafe static void WriteUnsafe(this byte[] buffer, ulong value, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			const int MAXBITS = 64;
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int index = bitposition >> 6;
+			int endpos = bitposition + bits;
+			int endindex = ((endpos - 1) >> 6);
+
+			System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
+
+			// Offset both the mask and the compressed value using the remainder as the offset
+			ulong mask = ulong.MaxValue >> (64 - bits);
+
+			ulong offsetmask = mask << -offset;
+			ulong offsetcomp = (ulong)value << -offset;
+
+			fixed (byte* bPtr = buffer)
+			{
+				ulong* uPtr = (ulong*)bPtr;
+				while (true)
+				{
+
+					// set the unwritten bits in byte[] to zero as a safety
+					uPtr[index] &= (ulong)~offsetmask; // set bits to zero
+					uPtr[index] |= (ulong)(offsetcomp & offsetmask);
+
+					if (index == endindex)
+						break;
+
+					// Push the compressed value and the mask to align with the next array element
+					offset += MAXBITS;
+					offsetmask = mask >> offset;
+					offsetcomp = (ulong)value >> offset;
+					index++;
+				}
+			}
+			
+
+			if (endpos > bitposition)
+				bitposition = endpos;
+
+			return;
+		}
+
+		public unsafe static void WriteUnsafe(ulong* uPtr, ulong value, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			const int MAXBITS = 64;
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int index = bitposition >> 6;
+			int endpos = bitposition + bits;
+			int endindex = ((endpos - 1) >> 6);
+
+			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
+
+			// Offset both the mask and the compressed value using the remainder as the offset
+			ulong mask = ulong.MaxValue >> (64 - bits);
+
+			ulong offsetmask = mask << -offset;
+			ulong offsetcomp = (ulong)value << -offset;
+
+			//fixed (byte* bPtr = buffer)
+			{
+				//ulong* uPtr = (ulong*)bPtr;
+				while (true)
+				{
+
+					// set the unwritten bits in byte[] to zero as a safety
+					uPtr[index] &= (ulong)~offsetmask; // set bits to zero
+					uPtr[index] |= (ulong)(offsetcomp & offsetmask);
+
+					if (index == endindex)
+						break;
+
+					// Push the compressed value and the mask to align with the next array element
+					offset += MAXBITS;
+					offsetmask = mask >> offset;
+					offsetcomp = (ulong)value >> offset;
+					index++;
+				}
+			}
+
+
+			if (endpos > bitposition)
+				bitposition = endpos;
+
+			return;
+		}
+
 		/// <summary>
 		/// This is an untested version of primary byte[].Write() method. Includes auto array resizing.
 		/// </summary>
@@ -210,8 +272,8 @@ namespace emotitron.Compression
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 3);
 
-			//System.Diagnostics.Debug.Assert((endindex < buffer.Length), bufferOverrunMsg);
-			
+			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
+
 			if (allowResize && endindex >= buffer.Length)
 				System.Array.Resize(ref buffer, buffer.Length * 2);
 
@@ -260,7 +322,7 @@ namespace emotitron.Compression
 			ulong offsetmask = mask << -offset;
 			ulong offsetval = (ulong)value << -offset;
 
-			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 5), bufferOverrunMsg);
 
 			while (true)
 			{
@@ -301,6 +363,8 @@ namespace emotitron.Compression
 			ulong offsetmask = (mask << -offset);
 			ulong offsetval = (value & mask) << -offset;
 
+			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 6), bufferOverrunMsg);
+
 			while (true)
 			{
 				// set the unwritten bits in byte[] to zero as a safety
@@ -320,74 +384,6 @@ namespace emotitron.Compression
 			if (endpos > bitposition)
 				bitposition = endpos;
 
-		}
-
-		#endregion
-
-		#region Obsolete Readers
-
-		[System.Obsolete("Argument order has changed.")]
-		public static ulong Read(this byte[] buffer, int bits, ref int bitposition)
-		{
-			return Read(buffer, ref bitposition, bits);
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static ulong Read(this uint[] buffer, int bits, ref int bitposition)
-		{
-			return Read(buffer, ref bitposition, bits);
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static ulong Read(this ulong[] buffer, int bits, ref int bitposition)
-		{
-			return Read(buffer, ref bitposition, bits);
-		}
-
-		[System.Obsolete("Argument order has changed.")]
-		public static byte ReadUInt8(this ulong[] buffer, int bits, ref int bitposition)
-		{
-			return (byte)Read(buffer, ref bitposition, bits);
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static uint ReadUInt32(this ulong[] buffer, int bits, ref int bitposition)
-		{
-			return (uint)Read(buffer, ref bitposition, bits);
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static ulong ReadUInt64(this ulong[] buffer, int bits, ref int bitposition)
-		{
-			return Read(buffer, ref bitposition, bits);
-		}
-
-		[System.Obsolete("Argument order has changed.")]
-		public static byte ReadUInt8(this uint[] buffer, int bits, ref int bitposition)
-		{
-			return (byte)Read(buffer, ref bitposition, bits);
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static uint ReadUInt32(this uint[] buffer, int bits, ref int bitposition)
-		{
-			return (uint)Read(buffer, ref bitposition, bits);
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static ulong ReadUInt64(this uint[] buffer, int bits, ref int bitposition)
-		{
-			return Read(buffer, ref bitposition, bits);
-		}
-
-		[System.Obsolete("Argument order has changed.")]
-		public static byte ReadUInt8(this byte[] buffer, int bits, ref int bitposition)
-		{
-			return (byte)Read(buffer, ref bitposition, bits);
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static uint ReadUInt32(this byte[] buffer, int bits, ref int bitposition)
-		{
-			return (byte)Read(buffer, ref bitposition, bits);
-		}
-		[System.Obsolete("Argument order has changed.")]
-		public static ulong ReadUInt64(this byte[] buffer, int bits, ref int bitposition)
-		{
-			return Read(buffer, ref bitposition, bits);
 		}
 
 		#endregion
@@ -512,95 +508,516 @@ namespace emotitron.Compression
 			return value;
 		}
 
+		/// <summary>
+		/// Read using an array pointer (unsafe) as the buffer.
+		/// </summary>
+		/// <param name="buffer"></param>
+		/// <param name="bitposition"></param>
+		/// <param name="bits"></param>
+		/// <returns></returns>
+		private unsafe static ulong ReadUnsafe(ulong* buffer, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return 0;
+
+			const int MAXBITS = 64;
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int index = bitposition >> 6;
+			int endpos = bitposition + bits;
+			int endindex = ((endpos - 1) >> 6);
+
+			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+
+			ulong mask = ulong.MaxValue >> (64 - bits);
+			ulong line = ((ulong)buffer[index] >> -offset);
+			ulong value = 0;
+
+			while (true)
+			{
+				value |= (line & mask);
+
+				if (index == endindex)
+					break;
+
+				offset += MAXBITS;
+				index++;
+				line = ((ulong)buffer[index] << offset);
+			}
+
+			bitposition = bitposition + bits;
+			return value;
+		}
+
+		#endregion
+
+		#region ReadOut UInt64[] To Array
+
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (ulong* sPtr = source)
+			fixed (byte* _tPtr = target)
+			{
+				ulong* tPtr = (ulong*)_tPtr;
+
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (ulong* sPtr = source)
+			fixed (uint* _tPtr = target)
+			{
+				ulong* tPtr = (ulong*)_tPtr;
+
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (ulong* sPtr = source)
+			fixed (ulong* tPtr = target)
+			{
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
+
+		#endregion
+
+		#region ReadOut UInt32[] To Array
+
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (uint* _sPtr = source)
+			fixed (byte* _tPtr = target)
+			{
+				ulong* sPtr = (ulong*)_sPtr;
+				ulong* tPtr = (ulong*)_tPtr;
+
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (uint* _sPtr = source)
+			fixed (uint* _tPtr = target)
+			{
+				ulong* sPtr = (ulong*)_sPtr;
+				ulong* tPtr = (ulong*)_tPtr;
+
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (uint* _sPtr = source)
+			fixed (ulong* tPtr = target)
+			{
+				ulong* sPtr = (ulong*)_sPtr;
+
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
+
+		#endregion
+
+		#region ReadOut UInt8[] to Array
+
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (byte* _sPtr = source)
+			fixed (ulong* tPtr = target)
+			{
+				ulong* sPtr = (ulong*)_sPtr;
+
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (byte* _sPtr = source)
+			fixed (uint* _tPtr = target)
+			{
+				ulong* sPtr = (ulong*)_sPtr;
+				ulong* tPtr = (ulong*)_tPtr;
+
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
+		/// <summary>
+		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
+		/// as they will be treated as ulong[] in unsafe.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="sourcePos">Bitpos of the source array to start read from.</param>
+		/// <param name="target"></param>
+		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
+		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
+		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
+			System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+
+			fixed (byte* _sPtr = source)
+			fixed (byte* _tPtr = target)
+			{
+				ulong* sPtr = (ulong*)_sPtr;
+				ulong* tPtr = (ulong*)_tPtr;
+
+				while (remaining > 0)
+				{
+					int cnt = remaining > 64 ? 64 : remaining;
+					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
+					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+
+					remaining -= cnt;
+				}
+			}
+		}
 		#endregion
 
 
+		#region Obsolete Writers
 
-		#region UINT32 Array Readers
-
-		/// <summary>
-		/// Read a bitcrushed uint out of an array starting at the indicated bit postion.
-		/// </summary>
-		/// <param name="buffer">The array we are deserializing from.</param>
-		/// <param name="bitposition">The position in the array (in bits) where we will begin reading.</param>
-		/// <param name="bits">The number of bits to read.</param>
-		public static uint ReadUInt32(this byte[] buffer, ref int bitposition, int bits = 32)
+		[System.Obsolete("Argument order has changed.")]
+		public static byte[] Write(this byte[] buffer, ulong value, int bits, ref int bitposition)
 		{
-			return (uint)Read(buffer, ref bitposition, bits);
+			Write(buffer, value, ref bitposition, bits);
+			return buffer;
 		}
-
-		/// <summary>
-		/// Read a bitcrushed uint out of an array starting at the indicated bit postion.
-		/// </summary>
-		/// <param name="buffer">The array we are deserializing from.</param>
-		/// <param name="bitposition">The position in the array (in bits) where we will begin reading.</param>
-		/// <param name="bits">The number of bits to read.</param>
-		public static uint ReadUInt32(this uint[] buffer, ref int bitposition, int bits = 32)
+		[System.Obsolete("Argument order has changed.")]
+		public static uint[] Write(this uint[] buffer, ulong value, int bits, ref int bitposition)
 		{
-			return (uint)Read(buffer, ref bitposition, bits);
+			Write(buffer, value, ref bitposition, bits);
+			return buffer;
 		}
-
-		/// <summary>
-		/// Read a bitcrushed uint out of an array starting at the indicated bit postion.
-		/// </summary>
-		/// <param name="buffer">The array we are deserializing from.</param>
-		/// <param name="bitposition">The position in the array (in bits) where we will begin reading.</param>
-		/// <param name="bits">The number of bits to read.</param>
-		public static uint ReadUInt32(this ulong[] buffer, ref int bitposition, int bits)
+		[System.Obsolete("Argument order has changed.")]
+		public static ulong[] Write(this ulong[] buffer, ulong value, int bits, ref int bitposition)
 		{
-			return (uint)Read(buffer, ref bitposition, bits);
+			Write(buffer, value, ref bitposition, bits);
+			return buffer;
 		}
-
-
+		[System.Obsolete("Argument order has changed.")]
+		public static byte[] Write(this byte[] buffer, float value, ref int bitposition)
+		{
+			Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
+			return buffer;
+		}
+		[System.Obsolete("Argument order has changed.")]
+		public static float Read(this byte[] buffer, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, 32);
+		}
 
 		#endregion
 
-		#region UINT64 Array Readers
+		#region Obsolete Readers
 
-		/// <summary>
-		/// Read a bitcrushed uint out of a array starting at the indicated bit postion.
-		/// </summary>
-		/// <param name="buffer">The array we are deserializing from.</param>
-		/// <param name="bitposition">The position in the array (in bits) where we will begin reading.</param>
-		/// <param name="bits">The number of bits to read.</param>
+		[System.Obsolete("Argument order has changed.")]
+		public static ulong Read(this byte[] buffer, int bits, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+		[System.Obsolete("Argument order has changed.")]
+		public static ulong Read(this uint[] buffer, int bits, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+		[System.Obsolete("Argument order has changed.")]
+		public static ulong Read(this ulong[] buffer, int bits, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Argument order has changed.")]
+		public static byte ReadUInt8(this ulong[] buffer, int bits, ref int bitposition)
+		{
+			return (byte)Read(buffer, ref bitposition, bits);
+		}
+		[System.Obsolete("Argument order has changed.")]
+		public static uint ReadUInt32(this ulong[] buffer, int bits, ref int bitposition)
+		{
+			return (uint)Read(buffer, ref bitposition, bits);
+		}
+		[System.Obsolete("Argument order has changed.")]
+		public static ulong ReadUInt64(this ulong[] buffer, int bits, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Argument order has changed.")]
+		public static byte ReadUInt8(this uint[] buffer, int bits, ref int bitposition)
+		{
+			return (byte)Read(buffer, ref bitposition, bits);
+		}
+		[System.Obsolete("Argument order has changed.")]
+		public static uint ReadUInt32(this uint[] buffer, int bits, ref int bitposition)
+		{
+			return (uint)Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Argument order has changed.")]
+		public static ulong ReadUInt64(this uint[] buffer, int bits, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Argument order has changed.")]
+		public static byte ReadUInt8(this byte[] buffer, int bits, ref int bitposition)
+		{
+			return (byte)Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Argument order has changed.")]
+		public static uint ReadUInt32(this byte[] buffer, int bits, ref int bitposition)
+		{
+			return (byte)Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Argument order has changed.")]
+		public static ulong ReadUInt64(this byte[] buffer, int bits, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+
 		[System.Obsolete("When reading out UInt64 values, just use the base Read() method instead to eliminate this extra method call.")]
 		public static ulong ReadUInt64(this byte[] buffer, ref int bitposition, int bits = 64)
 		{
 			return Read(buffer, ref bitposition, bits);
 		}
-		/// <summary>
-		/// Read a bitcrushed uint out of a array starting at the indicated bit postion.
-		/// </summary>
-		/// <param name="buffer">The array we are deserializing from.</param>
-		/// <param name="bitposition">The position in the array (in bits) where we will begin reading.</param>
-		/// <param name="bits">The number of bits to read.</param>
+
 		[System.Obsolete("When reading out UInt64 values, just use the base Read() method instead to eliminate this extra method call.")]
 		public static ulong ReadUInt64(this uint[] buffer, ref int bitposition, int bits = 64)
 		{
 			return Read(buffer, ref bitposition, bits);
 		}
-		/// <summary>
-		/// Read a bitcrushed uint out of a array starting at the indicated bit postion.
-		/// </summary>
-		/// <param name="buffer">The array we are deserializing from.</param>
-		/// <param name="bitposition">The position in the array (in bits) where we will begin reading.</param>
-		/// <param name="bits">The number of bits to read.</param>
+
 		[System.Obsolete("When reading out UInt64 values, just use the base Read() method instead to eliminate this extra method call.")]
 		public static ulong ReadUInt64(this ulong[] buffer, ref int bitposition, int bits = 64)
 		{
 			return Read(buffer, ref bitposition, bits);
 		}
-		#endregion
 
-		/// <summary>
-		/// Copy bits from one array to another.
-		/// </summary>
-		/// <param name="buffer"></param>
-		/// <param name="srcbuffer"></param>
-		/// <param name="readpos"></param>
-		/// <param name="writepos"></param>
-		/// <param name="bits"></param>
-		/// <returns>Returns the target buffer.</returns>
+		[System.Obsolete("Instead use the primary read method (returns a ulong), and cast the result to the desired unsigned primitive.")]
+		public static uint ReadUInt32(this byte[] buffer, ref int bitposition, int bits = 32)
+		{
+			return (uint)Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Instead use the primary read method (returns a ulong), and cast the result to the desired unsigned primitive.")]
+		public static uint ReadUInt32(this uint[] buffer, ref int bitposition, int bits = 32)
+		{
+			return (uint)Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Instead use the primary read method (returns a ulong), and cast the result to the desired unsigned primitive.")]
+		public static uint ReadUInt32(this ulong[] buffer, ref int bitposition, int bits)
+		{
+			return (uint)Read(buffer, ref bitposition, bits);
+		}
+
+		[System.Obsolete("Instead use ReadOutUnsafe. They are much faster.")]
 		public static byte[] Write(this byte[] buffer, byte[] srcbuffer, ref int readpos, ref int writepos, int bits)
 		{
 			while (bits > 0)
@@ -613,6 +1030,30 @@ namespace emotitron.Compression
 
 			return buffer;
 		}
+
+		[System.Obsolete("Do not use, this is for benchmarking comparisons only.")]
+		public static void ReadArrayOutSafe(this ulong[] source, int srcStartPos, byte[] target, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+			int readpos = srcStartPos;
+			int endpos = srcStartPos + bits;
+			int remaining = bits;
+
+			// TODO: Add len checks
+
+			while (remaining > 0)
+			{
+				int cnt = remaining > 64 ? 64 : remaining;
+				ulong val = source.Read(ref readpos, cnt);
+				target.Write(val, ref bitposition, cnt);
+
+				remaining -= cnt;
+			}
+		}
+
+		#endregion
+
 	}
 }
 
