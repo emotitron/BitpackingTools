@@ -41,22 +41,26 @@ namespace emotitron.Compression
 		[System.Obsolete("Argument order has changed.")]
 		public static byte[] Write(this byte[] buffer, ulong value, int bits, ref int bitposition)
 		{
-			return Write(buffer, value, ref bitposition, bits);
+			Write(buffer, value, ref bitposition, bits);
+			return buffer;
 		}
 		[System.Obsolete("Argument order has changed.")]
 		public static uint[] Write(this uint[] buffer, ulong value, int bits, ref int bitposition)
 		{
-			return Write(buffer, value, ref bitposition, bits);
+			Write(buffer, value, ref bitposition, bits);
+			return buffer;
 		}
 		[System.Obsolete("Argument order has changed.")]
 		public static ulong[] Write(this ulong[] buffer, ulong value, int bits, ref int bitposition)
 		{
-			return Write(buffer, value, ref bitposition, bits);
+			Write(buffer, value, ref bitposition, bits);
+			return buffer;
 		}
 		[System.Obsolete("Argument order has changed.")]
 		public static byte[] Write(this byte[] buffer, float value, ref int bitposition)
 		{
-			return Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
+			Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
+			return buffer;
 		}
 		[System.Obsolete("Argument order has changed.")]
 		public static float Read(this byte[] buffer, ref int bitposition)
@@ -117,7 +121,8 @@ namespace emotitron.Compression
 		/// <param name="bitposition">The bit position in the array we start the read at. Will be incremented by 32 bits.</param>
 		public static byte[] WriteFloat(this byte[] buffer, float value, ref int bitposition)
 		{
-			return Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
+			Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
+			return buffer;
 		}
 		/// <summary>
 		/// Reads a uint32 from the buffer, and converts that back to a float with a ByteConverter cast. If performance is a concern, you can call the primary (ByteConverter)byte[].Read())
@@ -141,11 +146,15 @@ namespace emotitron.Compression
 		/// <param name="bitposition"></param>
 		/// <param name="bits"></param>
 		/// <returns></returns>
-		public static byte[] Write(this byte[] buffer, ulong value, ref int bitposition, int bits)
+		public static void Write(this byte[] buffer, ulong value, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return;
+
 			const int MAXBITS = 8;
-			int offset = -(bitposition % MAXBITS);
-			int index = bitposition / MAXBITS;
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int index = bitposition >> 3;
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 3);
 
@@ -173,13 +182,14 @@ namespace emotitron.Compression
 				index++;
 			}
 
-			bitposition += bits;
+			if (endpos > bitposition)
+				bitposition = endpos;
 
-			return buffer;
+			return;
 		}
 
 		/// <summary>
-		/// This is the primary byte[].Write() method. All other byte[].Write methods lead to this one, so when performance matters, cast using (ByteConverter)value and use this method.
+		/// This is an untested version of primary byte[].Write() method. Includes auto array resizing.
 		/// </summary>
 		/// <param name="buffer"></param>
 		/// <param name="value"></param>
@@ -187,11 +197,15 @@ namespace emotitron.Compression
 		/// <param name="bits"></param>
 		/// <param name="allowResize">Allows the buffer to be doubled in size if it is too small for this write. YOU MUST GET THE RETURN BYTE[] REFERENCE. The supplied buffer becomes invalid.</param>
 		/// <returns>The actual byte[] used. Will be a new array if a resize occured.</returns>
-		public static byte[] Write(this byte[] buffer, ulong value, ref int bitposition, int bits, bool allowResize)
+		[System.Obsolete("Technically not obsolete... experimental code that may or may not become legit.")]
+		public static void Write(this byte[] buffer, ulong value, ref int bitposition, int bits, bool allowResize)
 		{
+			if (bits == 0)
+				return;
 
 			const int MAXBITS = 8;
-			int offset = -(bitposition % MAXBITS);
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
 			int index = bitposition >> 3;
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 3);
@@ -226,13 +240,17 @@ namespace emotitron.Compression
 			if (endpos > bitposition)
 				bitposition = endpos;
 
-			return buffer;
+			return;
 		}
 
-		public static uint[] Write(this uint[] buffer, ulong value, ref int bitposition, int bits)
+		public static void Write(this uint[] buffer, ulong value, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return;
+
 			const int MAXBITS = 32;
-			int offset = -(bitposition % MAXBITS);
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
 			int index = bitposition  >> 5;
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 5);
@@ -263,17 +281,17 @@ namespace emotitron.Compression
 			if (endpos > bitposition)
 				bitposition = endpos;
 
-			return buffer;
+			return;
 		}
 
-		public static ulong[] Write(this ulong[] buffer, ulong value, ref int bitposition, int bits)
+		public static void Write(this ulong[] buffer, ulong value, ref int bitposition, int bits)
 		{
 			if (bits == 0)
-				return buffer;
+				return;
 
 			const int MAXBITS = 64;
-			
-			int offset = -(bitposition % MAXBITS);
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
 			int index = bitposition >> 6;
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 6);
@@ -302,7 +320,6 @@ namespace emotitron.Compression
 			if (endpos > bitposition)
 				bitposition = endpos;
 
-			return buffer;
 		}
 
 		#endregion
@@ -387,12 +404,13 @@ namespace emotitron.Compression
 		public static ulong Read(this byte[] buffer, ref int bitposition, int bits)
 		{
 			const int MAXBITS = 8;
-			int offset = -(bitposition % MAXBITS);
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
 			int index = bitposition >> 3;
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 3);
 
-			System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
 			
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong line = ((ulong)buffer[index] >> -offset);
@@ -425,12 +443,13 @@ namespace emotitron.Compression
 		public static ulong Read(this uint[] buffer, ref int bitposition, int bits)
 		{
 			const int MAXBITS = 32;
-			int offset = -(bitposition % MAXBITS);
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
 			int index = bitposition >> 5;
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 5);
 
-			System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong line = ((ulong)buffer[index] >> -offset);
@@ -465,12 +484,13 @@ namespace emotitron.Compression
 				return 0;
 
 			const int MAXBITS = 64;
-			int offset = -(bitposition % MAXBITS);
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
 			int index = bitposition >> 6;
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 6);
 
-			System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong line = ((ulong)buffer[index] >> -offset);
