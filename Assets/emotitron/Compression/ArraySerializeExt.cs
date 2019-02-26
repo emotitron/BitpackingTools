@@ -819,6 +819,76 @@ namespace emotitron.Compression
 		}
 		#endregion
 
+		public static ulong IndexAsUInt64(this byte[] buffer, int index)
+		{
+			int i = index << 3;
+			return (ulong)(
+				(ulong)buffer[i] |
+				(ulong)buffer[i + 1] << 8 |
+				(ulong)buffer[i + 2] << 16 |
+				(ulong)buffer[i + 3] << 24 |
+				(ulong)buffer[i + 4] << 32 |
+				(ulong)buffer[i + 5] << 40 |
+				(ulong)buffer[i + 6] << 48 |
+				(ulong)buffer[i + 7] << 56);
+		}
+
+		public static ulong IndexAsUInt64(this uint[] buffer, int index)
+		{
+			int i = index << 1;
+			return (ulong)(
+				(ulong)buffer[i] |
+				(ulong)buffer[i + 1] << 32);
+		}
+
+		public static uint IndexAsUInt32(this byte[] buffer, int index)
+		{
+			int i = index << 3;
+			return (uint)(
+				(uint)buffer[i] |
+				(uint)buffer[i + 1] << 8 |
+				(uint)buffer[i + 2] << 16 |
+				(uint)buffer[i + 3] << 24);
+		}
+
+		public static byte IndexAsUInt8(this ulong[] buffer, int index)
+		{
+			const int MODULUS = 7;
+			int i = index >> 3;
+			int offset = (index & MODULUS) << 3; // modulus * 8
+			ulong element = buffer[i];
+			return (byte)((element >> offset));
+		}
+
+		public static byte IndexAsUInt8(this uint[] buffer, int index)
+		{
+			const int MODULUS = 3;
+			int i = index >> 3;
+			int offset = (index & MODULUS) << 3; // modulus * 8
+			ulong element = buffer[i];
+			return (byte)((element >> offset));
+		}
+
+		public static uint IndexAsUInt32(this ulong[] buffer, int index)
+		{
+			const int MODULUS = 1;
+			int i = index >> 1;
+			int offset = (index & MODULUS) << 5; // modulus * 8
+			ulong element = buffer[i];
+			return (byte)((element >> offset));
+		}
+
+
+		[Obsolete("Unsafe is slower in this context... trash this")]
+		public unsafe static ulong GetIndexAsUlongUnsafe(this byte[] buffer, int index)
+		{
+			fixed (byte* bPtr = buffer)
+			{
+				ulong* uPtr = (ulong*)bPtr;
+				return uPtr[index];
+			}
+		}
+
 
 		#region Obsolete Writers
 
