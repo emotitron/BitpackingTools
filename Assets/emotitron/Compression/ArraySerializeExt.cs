@@ -38,23 +38,20 @@ namespace emotitron.Compression
 
 		#region Read/Write Signed Value
 
-		public static byte[] WriteSigned(this byte[] buffer, int value, ref int bitposition, int bits)
+		public static void WriteSigned(this byte[] buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.Write(zigzag, ref bitposition, bits);
-			return buffer;
 		}
-		public static uint[] WriteSigned(this uint[] buffer, int value, ref int bitposition, int bits)
+		public static void WriteSigned(this uint[] buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.Write(zigzag, ref bitposition, bits);
-			return buffer;
 		}
-		public static ulong[] WriteSigned(this ulong[] buffer, int value, ref int bitposition, int bits)
+		public static void WriteSigned(this ulong[] buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.Write(zigzag, ref bitposition, bits);
-			return buffer;
 		}
 		public static int ReadSigned(this byte[] buffer, ref int bitposition, int bits)
 		{
@@ -85,11 +82,11 @@ namespace emotitron.Compression
 		/// <param name="buffer">The array we are reading from.</param>
 		/// <param name="value">The float value to write.</param>
 		/// <param name="bitposition">The bit position in the array we start the read at. Will be incremented by 32 bits.</param>
-		public static byte[] WriteFloat(this byte[] buffer, float value, ref int bitposition)
+		public static void WriteFloat(this byte[] buffer, float value, ref int bitposition)
 		{
 			Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
-			return buffer;
 		}
+		
 		/// <summary>
 		/// Reads a uint32 from the buffer, and converts that back to a float with a ByteConverter cast. If performance is a concern, you can call the primary (ByteConverter)byte[].Read())
 		/// </summary>
@@ -243,61 +240,6 @@ namespace emotitron.Compression
 				}
 			}
 
-
-			if (endpos > bitposition)
-				bitposition = endpos;
-
-			return;
-		}
-
-		/// <summary>
-		/// This is an untested version of primary byte[].Write() method. Includes auto array resizing.
-		/// </summary>
-		/// <param name="buffer"></param>
-		/// <param name="value"></param>
-		/// <param name="bitposition"></param>
-		/// <param name="bits"></param>
-		/// <param name="allowResize">Allows the buffer to be doubled in size if it is too small for this write. YOU MUST GET THE RETURN BYTE[] REFERENCE. The supplied buffer becomes invalid.</param>
-		/// <returns>The actual byte[] used. Will be a new array if a resize occured.</returns>
-		[System.Obsolete("Technically not obsolete... experimental code that may or may not become legit.")]
-		public static void Write(this byte[] buffer, ulong value, ref int bitposition, int bits, bool allowResize)
-		{
-			if (bits == 0)
-				return;
-
-			const int MAXBITS = 8;
-			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
-			int index = bitposition >> 3;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 3);
-
-			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
-
-			if (allowResize && endindex >= buffer.Length)
-				System.Array.Resize(ref buffer, buffer.Length * 2);
-
-			// Offset both the mask and the compressed value using the remainder as the offset
-			ulong mask = ulong.MaxValue >> (64 - bits);
-
-			ulong offsetmask = mask << -offset;
-			ulong offsetval = (ulong)value << -offset;
-
-			while (true)
-			{
-				// set the unwritten bits in byte[] to zero as a safety
-				buffer[index] &= (byte)~offsetmask; // set bits to zero
-				buffer[index] |= (byte)(offsetval & offsetmask);
-
-				if (index == endindex)
-					break;
-
-				// Push the compressed value and the mask to align with the next array element
-				offset += MAXBITS;
-				offsetmask = mask >> offset;
-				offsetval = (ulong)value >> offset;
-				index++;
-			}
 
 			if (endpos > bitposition)
 				bitposition = endpos;
