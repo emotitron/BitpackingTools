@@ -86,7 +86,7 @@ namespace emotitron.Compression
 		{
 			Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
 		}
-		
+
 		/// <summary>
 		/// Reads a uint32 from the buffer, and converts that back to a float with a ByteConverter cast. If performance is a concern, you can call the primary (ByteConverter)byte[].Read())
 		/// </summary>
@@ -191,7 +191,7 @@ namespace emotitron.Compression
 					index++;
 				}
 			}
-			
+
 
 			if (endpos > bitposition)
 				bitposition = endpos;
@@ -255,7 +255,7 @@ namespace emotitron.Compression
 			const int MAXBITS = 32;
 			const int MODULUS = MAXBITS - 1;
 			int offset = -(bitposition & MODULUS); // this is just a modulus
-			int index = bitposition  >> 5;
+			int index = bitposition >> 5;
 			int endpos = bitposition + bits;
 			int endindex = ((endpos - 1) >> 5);
 
@@ -310,7 +310,7 @@ namespace emotitron.Compression
 			while (true)
 			{
 				// set the unwritten bits in byte[] to zero as a safety
-				buffer[index] &= ~offsetmask ; // set bits to zero
+				buffer[index] &= ~offsetmask; // set bits to zero
 				buffer[index] |= (offsetval & offsetmask);
 
 				if (index == endindex)
@@ -326,6 +326,23 @@ namespace emotitron.Compression
 			if (endpos > bitposition)
 				bitposition = endpos;
 
+		}
+
+		#endregion
+
+		#region Secondary Readers
+
+		public static void WriteBool(this ulong[] buffer, bool b, ref int bitposition)
+		{
+			buffer.Write((ulong)(b ? 1 : 0), ref bitposition, 1);
+		}
+		public static void WriteBool(this uint[] buffer, bool b, ref int bitposition)
+		{
+			buffer.Write((ulong)(b ? 1 : 0), ref bitposition, 1);
+		}
+		public static void WriteBool(this byte[] buffer, bool b, ref int bitposition)
+		{
+			buffer.Write((ulong)(b ? 1 : 0), ref bitposition, 1);
 		}
 
 		#endregion
@@ -349,7 +366,7 @@ namespace emotitron.Compression
 			int endindex = ((endpos - 1) >> 3);
 
 			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
-			
+
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong line = ((ulong)buffer[index] >> -offset);
 			ulong value = 0;
@@ -493,6 +510,53 @@ namespace emotitron.Compression
 
 		#endregion
 
+		#region Secondary Readers
+
+		public static ulong ReadUInt64(this byte[] buffer, ref int bitposition, int bits = 64)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+
+		public static ulong ReadUInt64(this uint[] buffer, ref int bitposition, int bits = 64)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+
+		public static ulong ReadUInt64(this ulong[] buffer, ref int bitposition, int bits = 64)
+		{
+			return Read(buffer, ref bitposition, bits);
+		}
+
+		public static uint ReadUInt32(this byte[] buffer, ref int bitposition, int bits = 32)
+		{
+			return (uint)Read(buffer, ref bitposition, bits);
+		}
+
+		public static uint ReadUInt32(this uint[] buffer, ref int bitposition, int bits = 32)
+		{
+			return (uint)Read(buffer, ref bitposition, bits);
+		}
+
+		public static uint ReadUInt32(this ulong[] buffer, ref int bitposition, int bits)
+		{
+			return (uint)Read(buffer, ref bitposition, bits);
+		}
+
+		public static bool ReadBool(this ulong[] buffer, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, 1) == 1 ? true : false;
+		}
+		public static bool ReadBool(this uint[] buffer, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, 1) == 1 ? true : false;
+		}
+		public static bool ReadBool(this byte[] buffer, ref int bitposition)
+		{
+			return Read(buffer, ref bitposition, 1) == 1 ? true : false;
+		}
+
+		#endregion
+
 		#region ReadOut UInt64[] To Array
 
 		/// <summary>
@@ -528,6 +592,8 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+
+			targetPos += bits;
 		}
 		/// <summary>
 		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
@@ -538,7 +604,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOut(this ulong[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -562,6 +628,8 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+
+			targetPos += bits;
 		}
 		/// <summary>
 		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
@@ -572,7 +640,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOut(this ulong[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -594,6 +662,8 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+
+			targetPos += bits;
 		}
 
 		#endregion
@@ -609,7 +679,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOut(this uint[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -634,6 +704,8 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+
+			targetPos += bits;
 		}
 		/// <summary>
 		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
@@ -644,7 +716,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOut(this uint[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -670,6 +742,8 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+
+			targetPos += bits;
 		}
 		/// <summary>
 		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
@@ -680,7 +754,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOut(this uint[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -704,6 +778,8 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+
+			targetPos += bits;
 		}
 
 		#endregion
@@ -719,7 +795,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOut(this byte[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -744,7 +820,9 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+			targetPos += bits;
 		}
+
 		/// <summary>
 		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
 		/// as they will be treated as ulong[] in unsafe.
@@ -754,7 +832,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOut(this byte[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -780,6 +858,7 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+			targetPos += bits;
 		}
 		/// <summary>
 		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
@@ -790,7 +869,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOut(this byte[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -816,7 +895,9 @@ namespace emotitron.Compression
 					remaining -= cnt;
 				}
 			}
+			targetPos += bits;
 		}
+
 		#endregion
 
 		public static ulong IndexAsUInt64(this byte[] buffer, int index)
@@ -877,18 +958,6 @@ namespace emotitron.Compression
 			ulong element = buffer[i];
 			return (byte)((element >> offset));
 		}
-
-
-		[Obsolete("Unsafe is slower in this context... trash this")]
-		public unsafe static ulong GetIndexAsUlongUnsafe(this byte[] buffer, int index)
-		{
-			fixed (byte* bPtr = buffer)
-			{
-				ulong* uPtr = (ulong*)bPtr;
-				return uPtr[index];
-			}
-		}
-
 
 		#region Obsolete Writers
 
@@ -993,41 +1062,7 @@ namespace emotitron.Compression
 			return Read(buffer, ref bitposition, bits);
 		}
 
-		[System.Obsolete("When reading out UInt64 values, just use the base Read() method instead to eliminate this extra method call.")]
-		public static ulong ReadUInt64(this byte[] buffer, ref int bitposition, int bits = 64)
-		{
-			return Read(buffer, ref bitposition, bits);
-		}
 
-		[System.Obsolete("When reading out UInt64 values, just use the base Read() method instead to eliminate this extra method call.")]
-		public static ulong ReadUInt64(this uint[] buffer, ref int bitposition, int bits = 64)
-		{
-			return Read(buffer, ref bitposition, bits);
-		}
-
-		[System.Obsolete("When reading out UInt64 values, just use the base Read() method instead to eliminate this extra method call.")]
-		public static ulong ReadUInt64(this ulong[] buffer, ref int bitposition, int bits = 64)
-		{
-			return Read(buffer, ref bitposition, bits);
-		}
-
-		[System.Obsolete("Instead use the primary read method (returns a ulong), and cast the result to the desired unsigned primitive.")]
-		public static uint ReadUInt32(this byte[] buffer, ref int bitposition, int bits = 32)
-		{
-			return (uint)Read(buffer, ref bitposition, bits);
-		}
-
-		[System.Obsolete("Instead use the primary read method (returns a ulong), and cast the result to the desired unsigned primitive.")]
-		public static uint ReadUInt32(this uint[] buffer, ref int bitposition, int bits = 32)
-		{
-			return (uint)Read(buffer, ref bitposition, bits);
-		}
-
-		[System.Obsolete("Instead use the primary read method (returns a ulong), and cast the result to the desired unsigned primitive.")]
-		public static uint ReadUInt32(this ulong[] buffer, ref int bitposition, int bits)
-		{
-			return (uint)Read(buffer, ref bitposition, bits);
-		}
 
 		[System.Obsolete("Instead use ReadOutUnsafe. They are much faster.")]
 		public static byte[] Write(this byte[] buffer, byte[] srcbuffer, ref int readpos, ref int writepos, int bits)
@@ -1049,7 +1084,6 @@ namespace emotitron.Compression
 			if (bits == 0)
 				return;
 			int readpos = srcStartPos;
-			int endpos = srcStartPos + bits;
 			int remaining = bits;
 
 			// TODO: Add len checks
@@ -1062,6 +1096,7 @@ namespace emotitron.Compression
 
 				remaining -= cnt;
 			}
+			bitposition += bits;
 		}
 
 		#endregion

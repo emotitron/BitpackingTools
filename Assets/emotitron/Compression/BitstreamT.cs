@@ -30,7 +30,8 @@ namespace emotitron.Compression
 	{
 		/// Roundabout way of getting the size of the fixedbuffer, but works and is fast access later.
 		public static int BufferByteCount = Marshal.SizeOf(typeof(T));
-		public static int BufferULongCount = Marshal.SizeOf(typeof(T)) / 8;
+		public static int BufferULongCount = BufferByteCount / 8;
+		public static int BufferBitCount = BufferByteCount * 8;
 
 		[FieldOffset(0)]
 		private int _writePtr;
@@ -47,7 +48,7 @@ namespace emotitron.Compression
 		/// The exposed unsafe buffer.
 		/// </summary>
 		[FieldOffset(8)]
-		private fixed ulong fragments[1];
+		private fixed ulong fragments[128];
 
 		#region Properties
 
@@ -332,12 +333,15 @@ namespace emotitron.Compression
 
 			ulong offsetcomp = value << offset;
 
-			bool overrun = endindex >= BufferULongCount;
+			bool overrun = endpos > BufferBitCount;
 
-			System.Diagnostics.Debug.Assert(!overrun, bufferoverrunerr);
+			//System.Diagnostics.Debug.Assert(!overrun, bufferoverrunerr);
 
 			if (overrun)
+			{
+				Debug.LogError("Attempted write past end of unsafe buffer. Returning.");
 				return;
+			}
 
 			fixed (ulong* int64Ptr = fragments)
 			{
@@ -365,6 +369,12 @@ namespace emotitron.Compression
 			int offset = _readPtr % 64;
 			int endpos = _readPtr + bits;
 			int endindex = ((endpos - 1) >> 6);
+
+			if (endpos > BufferBitCount)
+			{
+				Debug.LogError("Attempted read past unsafe buffer end. Returning.");
+				return 0;
+			}
 
 			_readPtr += bits;
 
