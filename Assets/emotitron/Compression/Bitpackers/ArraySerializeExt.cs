@@ -50,6 +50,11 @@ namespace emotitron.Compression
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.Write(zigzag, ref bitposition, bits);
 		}
+		public unsafe static void WriteSigned(ulong* buffer, int value, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			WriteUnsafe(buffer, zigzag, ref bitposition, bits);
+		}
 		public unsafe static void InjectSigned(this int value, ulong* buffer, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
@@ -74,12 +79,18 @@ namespace emotitron.Compression
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
-		public unsafe static int ExtractSigned(ulong* uPtr, ref int bitposition, int bits)
+		public unsafe static int ReadSigned(ulong* uPtr, ref int bitposition, int bits)
 		{
 			uint value = (uint)ReadUnsafe(uPtr, ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
+		//public unsafe static int ExtractSigned(ulong* uPtr, ref int bitposition, int bits)
+		//{
+		//	uint value = (uint)ReadUnsafe(uPtr, ref bitposition, bits);
+		//	int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+		//	return zagzig;
+		//}
 
 		#endregion
 
