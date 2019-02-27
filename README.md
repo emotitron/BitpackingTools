@@ -22,6 +22,30 @@ The Array Serializer extension lets you bitpack directly to and from byte[], uin
   int restoredval1 = myBuffer.Read(ref readpos, 10);
   int restoredval2 = myBuffer.Read(ref readpos, 10);
 ```
+### Advanced Usage
+For sequential writes and reads of a byte[] or uint[] arrays, there are unsafe methods that internally treat these arrays as a ulong[], resulting in up to 4x faster reads and writes.
+```cs
+byte[] myBuffer = byte[100];
+uint val1 = 666;
+int val2 = -999;
+
+fixed (byte* bPtr = myBuffer)
+{
+  // Cast the byte* to ulong*
+  ulong* uPtr = (ulong*)bPtr;
+  
+  int writepos = 0;
+  // Two different write methods. Inject() and Write(). 
+  // Both are about the same speed, so it's up to personal preference.
+  val1.InjectUnsafe(uPtr, ref writepos, 10);
+  ArraySerializeExt.WriteSigned(uPtr, val2, ref writepos, 11);
+
+  readpos = 0;
+  // Unsafe pointers can't be the first argument of extensions, so there is no pretty way to do this.
+  uint restored1 = (uint)ArraySerializeExt.ReadUnsafe(uPtr, ref readpos, 10);
+  int restored2 = ArraySerializeExt.ReadSigned(uPtr, ref readpos, 11);
+}
+```
 
 ## PrimitiveSerializeExt class
 
