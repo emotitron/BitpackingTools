@@ -16,7 +16,7 @@ public class BenchmarkTests : MonoBehaviour
 	{
 		const int size = 63;
 		ulong val1 = 1;
-		ulong val2 = 2;
+		int val2 = -2;
 		ulong val3 = 3;
 		ulong val4 = 4;
 		ulong val5 = 5;
@@ -30,7 +30,7 @@ public class BenchmarkTests : MonoBehaviour
 		{
 			int pos = 0;
 			buffer.Write(val1, ref pos, size);
-			buffer.Write(val2, ref pos, size);
+			buffer.Write((ulong)val2, ref pos, size);
 			buffer.Write(val3, ref pos, size);
 			buffer.Write(val4, ref pos, size);
 			buffer.Write(val5, ref pos, size);
@@ -62,7 +62,7 @@ public class BenchmarkTests : MonoBehaviour
 				int pos = 0;
 				
 				val1.InjectUnsafe(uPtr, ref pos, size);
-				val2.InjectUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.WriteSigned(uPtr, val2, ref pos, size);
 				val3.InjectUnsafe(uPtr, ref pos, size);
 				val4.InjectUnsafe(uPtr, ref pos, size);
 				val5.InjectUnsafe(uPtr, ref pos, size);
@@ -73,15 +73,15 @@ public class BenchmarkTests : MonoBehaviour
 
 
 				pos = 0;
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadSigned(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
 			}
 		}
 		
@@ -97,7 +97,7 @@ public class BenchmarkTests : MonoBehaviour
 		TestAsArray();
 
 		ArrayCopy();
-		ArrayCopySafe();
+		//ArrayCopySafe();
 	}
 
 	public static void TestWriterIntegrity()
@@ -141,20 +141,20 @@ public class BenchmarkTests : MonoBehaviour
 
 	}
 
-	static void ArrayCopySafe()
-	{
-		var watch = System.Diagnostics.Stopwatch.StartNew();
+	//static void ArrayCopySafe()
+	//{
+	//	var watch = System.Diagnostics.Stopwatch.StartNew();
 
-		for (int loop = 0; loop < LOOP; ++loop)
-		{
-			int pos2 = 0;
-			ubuffer.ReadArrayOutSafe(0, buffer, ref pos2, 120 * 8);
-		}
+	//	for (int loop = 0; loop < LOOP; ++loop)
+	//	{
+	//		int pos2 = 0;
+	//		ubuffer.ReadArrayOutSafe(0, buffer, ref pos2, 120 * 8);
+	//	}
 
-		watch.Stop();
+	//	watch.Stop();
 
-		Debug.Log("Array Copy Safe: time=" + watch.ElapsedMilliseconds + " ms");
-	}
+	//	Debug.Log("Array Copy Safe: time=" + watch.ElapsedMilliseconds + " ms");
+	//}
 
 	static void ArrayCopy()
 	{
@@ -184,7 +184,7 @@ public class BenchmarkTests : MonoBehaviour
 			BasicWriter.Reset();
 			for (int i = 0; i < BYTE_CNT; ++i)
 			{
-				byte b = BasicWriter.BasicRead(buffer);
+				BasicWriter.BasicRead(buffer);
 			}
 		}
 
@@ -208,7 +208,7 @@ public class BenchmarkTests : MonoBehaviour
 			bitpos = 0;
 			for (int i = 0; i < BYTE_CNT - 1; ++i)
 			{
-				byte b = (byte)buffer.Read(ref bitpos, 8);
+				buffer.Read(ref bitpos, 8);
 			}
 		}
 		
@@ -234,7 +234,7 @@ public class BenchmarkTests : MonoBehaviour
 			ubuffer.Read(ref bitpos, 1);
 			for (int i = 0; i < BYTE_CNT - 1; ++i)
 			{
-				byte b = (byte)ubuffer.Read(ref bitpos, 33);
+				ubuffer.Read(ref bitpos, 33);
 			}
 		}
 
@@ -260,11 +260,11 @@ public class BenchmarkTests : MonoBehaviour
 				buffer.Write(255, ref bitpos, 8);
 
 			bitpos = 0;
-			byte ob = (byte)buffer.Read(ref bitpos, 1);
+			buffer.Read(ref bitpos, 1);
 
 			for (int i = 0; i < BYTE_CNT - 1; ++i)
 			{
-				byte b = (byte)buffer.Read(ref bitpos, 8);
+				buffer.Read(ref bitpos, 8);
 			}
 		}
 
