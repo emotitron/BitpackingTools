@@ -11,13 +11,7 @@ public class BenchmarkTests : MonoBehaviour
 	public static uint[] ibuffer = new uint[128];
 	public static ulong[] ubuffer = new ulong[128];
 	public static ulong[] ubuffer2 = new ulong[128];
-	//private static Bitstream bs = new Bitstream((ulong)222, (ulong)222, (ulong)222, (ulong)222, (uint)222);
-	//private static Bitstream1024 bs1024 = new Bitstream1024();
-	private static Bitstream<Buffer1024> bs1024 = new Bitstream<Buffer1024>();
-	private static Bitstream<Buffer40> bs40 = new Bitstream<Buffer40>();
-	private static Bitstream bs = new Bitstream();
-	private static Bitstream bs2 = new Bitstream();
-
+	
 	public unsafe static void TestAsArray()
 	{
 		const int size = 63;
@@ -30,14 +24,7 @@ public class BenchmarkTests : MonoBehaviour
 		ulong val7 = 7;
 		ulong val8 = 8;
 		ulong val9 = 9;
-		//int pos = 0;
-		//buffer.Write(1, ref pos, 8);
-		//buffer.Write(3, ref pos, 8);
-		//buffer.Write(7, ref pos, 8);
-		//buffer.Write(15, ref pos, 8);
 
-		//Debug.Log(buffer.IndexAsUInt64(0));
-		//Debug.Log(buffer.GetIndexAsUlongUnsafe(0));
 		var watch2 = System.Diagnostics.Stopwatch.StartNew();
 		for (int loop = 0; loop < LOOP; ++loop)
 		{
@@ -73,16 +60,7 @@ public class BenchmarkTests : MonoBehaviour
 			for (int loop = 0; loop < LOOP; ++loop)
 			{
 				int pos = 0;
-				//ArraySerializeExt.WriteUnsafe(uPtr, val1, ref pos, size);
-				//ArraySerializeExt.WriteUnsafe(uPtr, val2, ref pos, size);
-				//ArraySerializeExt.WriteUnsafe(uPtr, val3, ref pos, size);
-				//ArraySerializeExt.WriteUnsafe(uPtr, val4, ref pos, size);
-				//ArraySerializeExt.WriteUnsafe(uPtr, val5, ref pos, size);
-				//ArraySerializeExt.WriteUnsafe(uPtr, val6, ref pos, size);
-				//ArraySerializeExt.WriteUnsafe(uPtr, val7, ref pos, size);
-				//ArraySerializeExt.WriteUnsafe(uPtr, val8, ref pos, size);
-				//ArraySerializeExt.WriteUnsafe(uPtr, val9, ref pos, size);
-
+				
 				val1.InjectUnsafe(uPtr, ref pos, size);
 				val2.InjectUnsafe(uPtr, ref pos, size);
 				val3.InjectUnsafe(uPtr, ref pos, size);
@@ -111,22 +89,6 @@ public class BenchmarkTests : MonoBehaviour
 		Debug.Log("UnSafe " + watch1.ElapsedMilliseconds);
 
 		return;
-
-		//int pos = 0;
-		//ubuffer.Write(1, ref pos, 3);
-		//ubuffer.Write(3, ref pos, 33);
-		//ubuffer.Write(7, ref pos, 60);
-		//ubuffer.Write(15, ref pos, 60);
-		//pos = 0;
-		//ubuffer.Read(ref pos, 32);
-		//Debug.Log(ubuffer.Read(ref pos, 32));
-		//Debug.Log(ubuffer.Read(ref pos, 32));
-		//Debug.Log(ubuffer.Read(ref pos, 32));
-
-		//ubuffer.IndexAsUInt32(0);
-		//ubuffer.IndexAsUInt32(1);
-		//ubuffer.IndexAsUInt32(2);
-		//ubuffer.IndexAsUInt32(3);
 	}
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -134,62 +96,8 @@ public class BenchmarkTests : MonoBehaviour
 	{
 		TestAsArray();
 
-		return;
-
 		ArrayCopy();
 		ArrayCopySafe();
-
-
-		bs.Buffer = ubuffer;
-		bs2.Buffer = ubuffer2;
-
-		int pos = 0;
-		for (int i = 0; i < ubuffer.Length; ++i)
-			ubuffer.Write(88, ref pos, 60);
-
-		int pos2 = 0;
-		ubuffer.ReadOutUnsafe(0, buffer, ref pos2, pos);
-
-		pos = 0;
-		for (int i = 0; i < ubuffer.Length; ++i)
-			Debug.Log(i + ": " + buffer.Read(ref pos, 60));
-
-		Debug.Log("Testing <b>" + BYTE_CNT * LOOP + "</b> Byte Read/Writes");
-
-		//var watch = System.Diagnostics.Stopwatch.StartNew();
-		//for (int loop = 0; loop < LOOP; ++loop)
-		//	for (int i = 0; i < 20; ++i)
-		//	{
-		//		int pos = 0;
-		//		ubuffer.WriteFast(2, ref pos, 60);
-		//	}
-		//watch.Stop();
-		//Debug.Log("Fast " + watch.ElapsedMilliseconds);
-
-
-		var watch2 = System.Diagnostics.Stopwatch.StartNew();
-		for (int loop = 0; loop < LOOP; ++loop)
-			for (int i = 0; i < 20; ++i)
-			{
-				int posit = 0;
-				ubuffer.Write(2, ref posit, 60);
-			}
-		watch2.Stop();
-		Debug.Log("Slow " + watch2.ElapsedMilliseconds);
-
-		ByteForByteWrite();
-
-		BitpackBytesEven();
-		BitpackBytesUnEven();
-
-		BitpackBytesToULongUneven();
-
-		BitstreamTest();
-		//BitstreamIndirectTest();
-		BitstreamSafeArrayTest();
-
-
-		Debug.Log("--------");
 	}
 
 	public static void TestWriterIntegrity()
@@ -335,94 +243,7 @@ public class BenchmarkTests : MonoBehaviour
 		Debug.Log("Uneven Bitpack ulong[]: time=" + watch.ElapsedMilliseconds + " ms");
 	}
 
-
-	public static void BitstreamTest()
-	{
-		var watch = System.Diagnostics.Stopwatch.StartNew();
-
-		for (int loop = 0; loop < LOOP; ++loop)
-		{
-
-			bs1024.Reset();
-
-			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
-			/// forcing worst case split across two byte[] indexs
-			bs1024.WriteBool(true);
-
-			for (int i = 0; i < BYTE_CNT - 1; ++i)
-				bs1024.Write(255, 8);
-
-			bool ob = bs1024.ReadBool();
-
-			for (int i = 0; i < BYTE_CNT -1; ++i)
-			{
-				byte b = (byte)bs1024.Read(8);
-			}
-		}
-
-		watch.Stop();
-
-		Debug.Log("Unsafe Bitstream: time=" + watch.ElapsedMilliseconds + " ms");
-	}
-
-	public static void BitstreamIndirectTest()
-	{
-		var watch = System.Diagnostics.Stopwatch.StartNew();
-
-		for (int loop = 0; loop < LOOP; ++loop)
-		{
-
-			bs40.Reset();
-
-			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
-			/// forcing worst case split across two byte[] indexs
-			bs40.WriteBool(true);
-
-			for (int i = 0; i < 40 - 1; ++i)
-				bs40.WriteByte(255);
-
-			bool ob = bs40.ReadBool();
-
-			for (int i = 0; i < 40 - 1; ++i)
-			{
-				byte b = bs40.ReadByte();
-			}
-		}
-
-		watch.Stop();
-
-		Debug.Log("Unsafe Bitstream w/ Indirect Calls: time=" + watch.ElapsedMilliseconds + " ms");
-	}
 	
-
-	public static void BitstreamSafeArrayTest()
-	{
-		var watch = System.Diagnostics.Stopwatch.StartNew();
-
-		for (int loop = 0; loop < LOOP; ++loop)
-		{
-			bs.Reset();
-
-			/// First 1 bit write is to ensure all following byte writes don't align with a single byte in the byte[], 
-			/// forcing worst case split across two byte[] indexs
-			bs.WriteBool(true);
-
-			for (int i = 0; i < BYTE_CNT - 1; ++i)
-					bs.Overwrite(255,  33);
-
-			bool ob = bs.ReadBool();
-
-			for (int i = 0; i < BYTE_CNT - 1; ++i)
-			{
-				byte b = (byte)bs.Read(33);
-			}
-		}
-
-		watch.Stop();
-
-		Debug.Log("Safe Bitstream w/ Array: time=" + watch.ElapsedMilliseconds + " ms");
-	}
-
 	public static void BitpackBytesUnEven()
 	{
 		var watch = System.Diagnostics.Stopwatch.StartNew();
