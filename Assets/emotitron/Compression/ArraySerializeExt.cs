@@ -22,9 +22,6 @@
 * THE SOFTWARE.
 */
 
-using System.Runtime.InteropServices;
-using System;
-
 
 namespace emotitron.Compression
 {
@@ -53,6 +50,12 @@ namespace emotitron.Compression
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.Write(zigzag, ref bitposition, bits);
 		}
+		public unsafe static void InjectSigned(this int value, ulong* buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			WriteUnsafe(buffer, zigzag, ref bitposition, bits);
+		}
+
 		public static int ReadSigned(this byte[] buffer, ref int bitposition, int bits)
 		{
 			uint value = (uint)buffer.Read(ref bitposition, bits);
@@ -68,6 +71,12 @@ namespace emotitron.Compression
 		public static int ReadSigned(this ulong[] buffer, ref int bitposition, int bits)
 		{
 			uint value = (uint)buffer.Read(ref bitposition, bits);
+			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+			return zagzig;
+		}
+		public unsafe static int ExtractSigned(ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint value = (uint)ReadUnsafe(uPtr, ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
@@ -151,54 +160,62 @@ namespace emotitron.Compression
 			return;
 		}
 
-		public unsafe static void WriteUnsafe(this byte[] buffer, ulong value, ref int bitposition, int bits)
-		{
-			if (bits == 0)
-				return;
+		//public unsafe static void WriteUnsafe(this byte[] buffer, ulong value, ref int bitposition, int bits)
+		//{
+		//	if (bits == 0)
+		//		return;
 
-			const int MAXBITS = 64;
-			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
-			int index = bitposition >> 6;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 6);
+		//	const int MAXBITS = 64;
+		//	const int MODULUS = MAXBITS - 1;
+		//	int offset = -(bitposition & MODULUS); // this is just a modulus
+		//	int index = bitposition >> 6;
+		//	int endpos = bitposition + bits;
+		//	int endindex = ((endpos - 1) >> 6);
 
-			System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
+		//	System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
 
-			// Offset both the mask and the compressed value using the remainder as the offset
-			ulong mask = ulong.MaxValue >> (64 - bits);
+		//	// Offset both the mask and the compressed value using the remainder as the offset
+		//	ulong mask = ulong.MaxValue >> (64 - bits);
 
-			ulong offsetmask = mask << -offset;
-			ulong offsetcomp = (ulong)value << -offset;
+		//	ulong offsetmask = mask << -offset;
+		//	ulong offsetcomp = (ulong)value << -offset;
 
-			fixed (byte* bPtr = buffer)
-			{
-				ulong* uPtr = (ulong*)bPtr;
-				while (true)
-				{
+		//	fixed (byte* bPtr = buffer)
+		//	{
+		//		ulong* uPtr = (ulong*)bPtr;
+		//		while (true)
+		//		{
 
-					// set the unwritten bits in byte[] to zero as a safety
-					uPtr[index] &= (ulong)~offsetmask; // set bits to zero
-					uPtr[index] |= (ulong)(offsetcomp & offsetmask);
+		//			// set the unwritten bits in byte[] to zero as a safety
+		//			uPtr[index] &= (ulong)~offsetmask; // set bits to zero
+		//			uPtr[index] |= (ulong)(offsetcomp & offsetmask);
 
-					if (index == endindex)
-						break;
+		//			if (index == endindex)
+		//				break;
 
-					// Push the compressed value and the mask to align with the next array element
-					offset += MAXBITS;
-					offsetmask = mask >> offset;
-					offsetcomp = (ulong)value >> offset;
-					index++;
-				}
-			}
+		//			// Push the compressed value and the mask to align with the next array element
+		//			offset += MAXBITS;
+		//			offsetmask = mask >> offset;
+		//			offsetcomp = (ulong)value >> offset;
+		//			index++;
+		//		}
+		//	}
 
 
-			if (endpos > bitposition)
-				bitposition = endpos;
+		//	if (endpos > bitposition)
+		//		bitposition = endpos;
 
-			return;
-		}
+		//	return;
+		//}
 
+		/// <summary>
+		/// Primary Unsafe writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		/// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
+		/// <param name="value"></param>
+		/// <param name="bitposition"></param>
+		/// <param name="bits"></param>
 		public unsafe static void WriteUnsafe(ulong* uPtr, ulong value, ref int bitposition, int bits)
 		{
 			if (bits == 0)
@@ -219,33 +236,78 @@ namespace emotitron.Compression
 			ulong offsetmask = mask << -offset;
 			ulong offsetcomp = (ulong)value << -offset;
 
-			//fixed (byte* bPtr = buffer)
+			while (true)
 			{
-				//ulong* uPtr = (ulong*)bPtr;
-				while (true)
-				{
+				// set the unwritten bits in byte[] to zero as a safety
+				uPtr[index] &= (ulong)~offsetmask; // set bits to zero
+				uPtr[index] |= (ulong)(offsetcomp & offsetmask);
 
-					// set the unwritten bits in byte[] to zero as a safety
-					uPtr[index] &= (ulong)~offsetmask; // set bits to zero
-					uPtr[index] |= (ulong)(offsetcomp & offsetmask);
+				if (index == endindex)
+					break;
 
-					if (index == endindex)
-						break;
-
-					// Push the compressed value and the mask to align with the next array element
-					offset += MAXBITS;
-					offsetmask = mask >> offset;
-					offsetcomp = (ulong)value >> offset;
-					index++;
-				}
+				// Push the compressed value and the mask to align with the next array element
+				offset += MAXBITS;
+				offsetmask = mask >> offset;
+				offsetcomp = (ulong)value >> offset;
+				index++;
 			}
-
 
 			if (endpos > bitposition)
 				bitposition = endpos;
 
 			return;
 		}
+
+		/// <summary>
+		/// Primary Unsafe writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
+		/// <param name="bitposition"></param>
+		/// <param name="bits"></param>
+		public unsafe static void InjectUnsafe(this ulong value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			const int MAXBITS = 64;
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int index = bitposition >> 6;
+			int endpos = bitposition + bits;
+			int endindex = ((endpos - 1) >> 6);
+
+			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
+
+			// Offset both the mask and the compressed value using the remainder as the offset
+			ulong mask = ulong.MaxValue >> (64 - bits);
+
+			ulong offsetmask = mask << -offset;
+			ulong offsetcomp = (ulong)value << -offset;
+
+			while (true)
+			{
+				// set the unwritten bits in byte[] to zero as a safety
+				uPtr[index] &= (ulong)~offsetmask; // set bits to zero
+				uPtr[index] |= (ulong)(offsetcomp & offsetmask);
+
+				if (index == endindex)
+					break;
+
+				// Push the compressed value and the mask to align with the next array element
+				offset += MAXBITS;
+				offsetmask = mask >> offset;
+				offsetcomp = (ulong)value >> offset;
+				index++;
+			}
+
+			if (endpos > bitposition)
+				bitposition = endpos;
+
+			return;
+		}
+
 
 		public static void Write(this uint[] buffer, ulong value, ref int bitposition, int bits)
 		{
@@ -468,13 +530,14 @@ namespace emotitron.Compression
 		}
 
 		/// <summary>
-		/// Read using an array pointer (unsafe) as the buffer.
+		/// Primary Unsafe Read. Fast read for byte[] and unit[] by treating them as ulong[].
+		/// WARNING: There is no bounds checking on this method!
 		/// </summary>
-		/// <param name="buffer"></param>
+		/// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
 		/// <param name="bitposition"></param>
 		/// <param name="bits"></param>
-		/// <returns></returns>
-		private unsafe static ulong ReadUnsafe(ulong* buffer, ref int bitposition, int bits)
+		/// <returns>Returns the read value.</returns>
+		public unsafe static ulong ReadUnsafe(ulong* uPtr, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return 0;
@@ -489,7 +552,7 @@ namespace emotitron.Compression
 			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong line = ((ulong)buffer[index] >> -offset);
+			ulong line = ((ulong)uPtr[index] >> -offset);
 			ulong value = 0;
 
 			while (true)
@@ -501,7 +564,7 @@ namespace emotitron.Compression
 
 				offset += MAXBITS;
 				index++;
-				line = ((ulong)buffer[index] << offset);
+				line = ((ulong)uPtr[index] << offset);
 			}
 
 			bitposition = bitposition + bits;
@@ -900,6 +963,10 @@ namespace emotitron.Compression
 
 		#endregion
 
+		/// <summary>
+		/// Treats buffer as ulong[] and returns the index value of that virtual ulong[]
+		/// </summary>
+		/// <param name="index">The index of the virtual ulong[]</param>
 		public static ulong IndexAsUInt64(this byte[] buffer, int index)
 		{
 			int i = index << 3;
@@ -913,7 +980,10 @@ namespace emotitron.Compression
 				(ulong)buffer[i + 6] << 48 |
 				(ulong)buffer[i + 7] << 56);
 		}
-
+		/// <summary>
+		/// Treats buffer as ulong[] and returns the index value of that virtual ulong[]
+		/// </summary>
+		/// <param name="index">The index of the virtual ulong[]</param>
 		public static ulong IndexAsUInt64(this uint[] buffer, int index)
 		{
 			int i = index << 1;
@@ -922,6 +992,10 @@ namespace emotitron.Compression
 				(ulong)buffer[i + 1] << 32);
 		}
 
+		/// <summary>
+		/// Treats buffer as uint[] and returns the index value of that virtual uint[]
+		/// </summary>
+		/// <param name="index">The index of the virtual uint[]</param>
 		public static uint IndexAsUInt32(this byte[] buffer, int index)
 		{
 			int i = index << 3;
@@ -931,7 +1005,22 @@ namespace emotitron.Compression
 				(uint)buffer[i + 2] << 16 |
 				(uint)buffer[i + 3] << 24);
 		}
-
+		/// <summary>
+		/// Treats buffer as uint[] and returns the index value of that virtual uint[]
+		/// </summary>
+		/// <param name="index">The index of the virtual uint[]</param>
+		public static uint IndexAsUInt32(this ulong[] buffer, int index)
+		{
+			const int MODULUS = 1;
+			int i = index >> 1;
+			int offset = (index & MODULUS) << 5; // modulus * 8
+			ulong element = buffer[i];
+			return (byte)((element >> offset));
+		}
+		/// <summary>
+		/// Treats buffer as byte[] and returns the index value of that virtual byte[]
+		/// </summary>
+		/// <param name="index">The index of the virtual byte[]</param>
 		public static byte IndexAsUInt8(this ulong[] buffer, int index)
 		{
 			const int MODULUS = 7;
@@ -940,21 +1029,15 @@ namespace emotitron.Compression
 			ulong element = buffer[i];
 			return (byte)((element >> offset));
 		}
-
+		/// <summary>
+		/// Treats buffer as byte[] and returns the index value of that virtual byte[]
+		/// </summary>
+		/// <param name="index">The index of the virtual byte[]</param>
 		public static byte IndexAsUInt8(this uint[] buffer, int index)
 		{
 			const int MODULUS = 3;
 			int i = index >> 3;
 			int offset = (index & MODULUS) << 3; // modulus * 8
-			ulong element = buffer[i];
-			return (byte)((element >> offset));
-		}
-
-		public static uint IndexAsUInt32(this ulong[] buffer, int index)
-		{
-			const int MODULUS = 1;
-			int i = index >> 1;
-			int offset = (index & MODULUS) << 5; // modulus * 8
 			ulong element = buffer[i];
 			return (byte)((element >> offset));
 		}

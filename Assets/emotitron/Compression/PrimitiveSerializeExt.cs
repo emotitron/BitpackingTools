@@ -31,53 +31,53 @@ namespace emotitron.Compression
 	/// </summary>
 	public static class PrimitiveSerializeExt
 	{
-		const string overrunerror = "Write buffer overrun. writepos + bitcount exceeds target length. Data loss will occur.";
+		const string overrunerror = "Write buffer overrun. writepos + bits exceeds target length. Data loss will occur.";
 
 		#region	Inject ByteConverted
 
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ByteConverter src, ref ulong buffer, ref int bitposition, int bitcount)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ByteConverter value, ref ulong buffer, ref int bitposition, int bits)
 		{
-			((ulong)src).Inject(ref buffer, ref bitposition, bitcount);
+			((ulong)value).Inject(ref buffer, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ByteConverter src, ref uint buffer, ref int bitposition, int bitcount)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ByteConverter value, ref uint buffer, ref int bitposition, int bits)
 		{
-			((ulong)src).Inject(ref buffer, ref bitposition, bitcount);
+			((ulong)value).Inject(ref buffer, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ByteConverter src, ref ushort buffer, ref int bitposition, int bitcount)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ByteConverter value, ref ushort buffer, ref int bitposition, int bits)
 		{
-			((ulong)src).Inject(ref buffer, ref bitposition, bitcount);
+			((ulong)value).Inject(ref buffer, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ByteConverter src, ref byte buffer, ref int bitposition, int bitcount)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ByteConverter value, ref byte buffer, ref int bitposition, int bits)
 		{
-			((ulong)src).Inject(ref buffer, ref bitposition, bitcount);
+			((ulong)value).Inject(ref buffer, ref bitposition, bits);
 		}
 
 		#endregion
@@ -96,18 +96,42 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
 		/// </summary>
-		public static void InjectSigned(this long src, ref ulong buffer, ref int bitposition, int bits)
+		public static void InjectSigned(this long value, ref ulong buffer, ref int bitposition, int bits)
 		{
-			uint zigzag = (uint)((src << 1) ^ (src >> 31));
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			zigzag.Inject(ref buffer, ref bitposition, bits);
 		}
 		/// <summary>
-		/// Extract (Read) a previously injected signed int back out of a buffer.
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this int value, ref ulong buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this short value, ref ulong buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this sbyte value, ref ulong buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Read a previously injected signed int back out of a buffer.
 		/// </summary>
 		/// <returns>Returns the restored signed value.</returns>
-		public static int ExtractSigned(this ulong buffer, int bitposition, int bits)
+		public static int ReadSigned(this ulong buffer, ref int bitposition, int bits)
 		{
-			uint value = (uint)buffer.Extract(ref bitposition, bits);
+			uint value = (uint)buffer.Read(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
@@ -124,18 +148,42 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
 		/// </summary>
-		public static void InjectSigned(this long src, ref uint buffer, ref int bitposition, int bits)
+		public static void InjectSigned(this long value, ref uint buffer, ref int bitposition, int bits)
 		{
-			uint zigzag = (uint)((src << 1) ^ (src >> 31));
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			zigzag.Inject(ref buffer, ref bitposition, bits);
 		}
 		/// <summary>
-		/// Extract (Read) a previously injected signed int back out of a buffer.
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this int value, ref uint buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this short value, ref uint buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this sbyte value, ref uint buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Read a previously injected signed int back out of a buffer.
 		/// </summary>
 		/// <returns>Returns the restored signed value.</returns>
-		public static int ExtractSigned(this uint buffer, int bitposition, int bits)
+		public static int ReadSigned(this uint buffer, ref int bitposition, int bits)
 		{
-			uint value = (uint)buffer.Extract(ref bitposition, bits);
+			uint value = (uint)buffer.Read(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
@@ -152,18 +200,42 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
 		/// </summary>
-		public static void InjectSigned(this long src, ref ushort buffer, ref int bitposition, int bits)
+		public static void InjectSigned(this long value, ref ushort buffer, ref int bitposition, int bits)
 		{
-			uint zigzag = (uint)((src << 1) ^ (src >> 31));
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			zigzag.Inject(ref buffer, ref bitposition, bits);
 		}
 		/// <summary>
-		/// Extract (Read) a previously injected signed int back out of a buffer.
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this int value, ref ushort buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this short value, ref ushort buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this sbyte value, ref ushort buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Read a previously injected signed int back out of a buffer.
 		/// </summary>
 		/// <returns>Returns the restored signed value.</returns>
-		public static int ExtractSigned(this ushort buffer, int bitposition, int bits)
+		public static int ReadSigned(this ushort buffer, ref int bitposition, int bits)
 		{
-			uint value = (uint)buffer.Extract(ref bitposition, bits);
+			uint value = (uint)buffer.Read(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
@@ -180,20 +252,99 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
 		/// </summary>
-		public static void InjectSigned(this long src, ref byte buffer, ref int bitposition, int bits)
+		public static void InjectSigned(this long value, ref byte buffer, ref int bitposition, int bits)
 		{
-			uint zigzag = (uint)((src << 1) ^ (src >> 31));
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			zigzag.Inject(ref buffer, ref bitposition, bits);
 		}
 		/// <summary>
-		/// Extract (Read) a previously injected signed int back out of a buffer.
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this int value, ref byte buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this short value, ref byte buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write) a signed value into a buffer using zigzag. The buffer reference is modified.
+		/// </summary>
+		public static void InjectSigned(this sbyte value, ref byte buffer, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			zigzag.Inject(ref buffer, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Read a previously injected signed int back out of a buffer.
 		/// </summary>
 		/// <returns>Returns the restored signed value.</returns>
-		public static int ExtractSigned(this byte buffer, int bitposition, int bits)
+		public static int ReadSigned(this byte buffer, ref int bitposition, int bits)
 		{
-			uint value = (uint)buffer.Extract(ref bitposition, bits);
+			uint value = (uint)buffer.Read(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
+		}
+
+		#endregion
+
+		#region Boolean Write/Inject/Extract
+
+		public static ulong WritetBool(this ulong buffer, bool value, ref int bitposition)
+		{
+			return Write(buffer, (ulong)(value ? 1 : 0), ref bitposition, 1);
+		}
+		public static uint WritetBool(this uint buffer, bool value, ref int bitposition)
+		{
+			return Write(buffer, (ulong)(value ? 1 : 0), ref bitposition, 1);
+		}
+		public static ushort WritetBool(this ushort buffer, bool value, ref int bitposition)
+		{
+			return Write(buffer, (ulong)(value ? 1 : 0), ref bitposition, 1);
+		}
+		public static byte WritetBool(this byte buffer, bool value, ref int bitposition)
+		{
+			return Write(buffer, (ulong)(value ? 1 : 0), ref bitposition, 1);
+		}
+
+		public static void Inject(this bool value, ref ulong buffer, ref int bitposition)
+		{
+			Inject((ulong)(value ? 1 : 0), ref buffer,  ref bitposition, 1);
+		}
+		public static void Inject(this bool value, ref uint buffer, ref int bitposition)
+		{
+			Inject((ulong)(value ? 1 : 0), ref buffer, ref bitposition, 1);
+		}
+		public static void Inject(this bool value, ref ushort buffer, ref int bitposition)
+		{
+			Inject((ulong)(value ? 1 : 0), ref buffer, ref bitposition, 1);
+		}
+		public static void Inject(this bool value, ref byte buffer, ref int bitposition)
+		{
+			Inject((ulong)(value ? 1 : 0), ref buffer, ref bitposition, 1);
+		}
+
+		public static bool ReadBool(this ulong buffer, ref int bitposition)
+		{
+			return (buffer.Read(ref bitposition, 1) == 0) ? false : true;
+		}
+		public static bool ReadtBool(this uint buffer, ref int bitposition)
+		{
+			return (buffer.Read(ref bitposition, 1) == 0) ? false : true;
+		}
+		public static bool ReadBool(this ushort buffer, ref int bitposition)
+		{
+			return (buffer.Read(ref bitposition, 1) == 0) ? false : true;
+		}
+		public static bool ReadBool(this byte buffer, ref int bitposition)
+		{
+			return (buffer.Read(ref bitposition, 1) == 0) ? false : true;
 		}
 
 		#endregion
@@ -206,21 +357,21 @@ namespace emotitron.Compression
 		/// </summary>
 		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
 		/// <returns>Returns the modified buffer.</returns>
-		public static ulong Write(this ulong buffer, ulong value, ref int bitposition, int bitcount = 64)
+		public static ulong Write(this ulong buffer, ulong value, ref int bitposition, int bits = 64)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
+			System.Diagnostics.Debug.Assert(bitposition + bits <= 64, overrunerror);
 
-			ulong offsetsrc = value << bitposition;
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
+			ulong offsetvalue = value << bitposition;
+			ulong mask = ulong.MaxValue >> (64 - bits) << bitposition;
 
 			// Clear bits in buffer we need to write to, then write to them.
 			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
+			buffer |= (mask & offsetvalue);
 
-			bitposition += bitcount;
+			bitposition += bits;
 			return buffer;
 		}
 
@@ -230,21 +381,21 @@ namespace emotitron.Compression
 		/// </summary>
 		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
 		/// <returns>Returns the modified buffer.</returns>
-		public static uint Write(this uint buffer, ulong value, ref int bitposition, int bitcount = 64)
+		public static uint Write(this uint buffer, ulong value, ref int bitposition, int bits = 64)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			System.Diagnostics.Debug.Assert(bitposition + bits <= 32, overrunerror);
 
-			uint offsetsrc = (uint)value << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
+			uint offsetvalue = (uint)value << bitposition;
+			uint mask = uint.MaxValue >> (32 - bits) << bitposition;
 
 			// Clear bits in buffer we need to write to, then write to them.
 			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
+			buffer |= (mask & offsetvalue);
 
-			bitposition += bitcount;
+			bitposition += bits;
 			return buffer;
 		}
 
@@ -254,22 +405,22 @@ namespace emotitron.Compression
 		/// </summary>
 		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
 		/// <returns>Returns the modified buffer.</returns>
-		public static ushort Write(this ushort buffer, ulong value, ref int bitposition, int bitcount = 64)
+		public static ushort Write(this ushort buffer, ulong value, ref int bitposition, int bits = 64)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
+			System.Diagnostics.Debug.Assert(bitposition + bits <= 16, overrunerror);
 
-			uint offsetsrc = ((uint)value << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
+			uint offsetvalue = ((uint)value << bitposition);
+			uint mask = ((uint)ushort.MaxValue >> (16 - bits) << bitposition);
 
 			// Clear bits in buffer we need to write to, then write to them.
 			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
+			_target |= (mask & offsetvalue);
 			buffer = (ushort)_target;
 
-			bitposition += bitcount;
+			bitposition += bits;
 			return buffer;
 		}
 
@@ -279,22 +430,22 @@ namespace emotitron.Compression
 		/// </summary>
 		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
 		/// <returns>Returns the modified buffer.</returns>
-		public static byte Write(this byte buffer, ulong value, ref int bitposition, int bitcount = 64)
+		public static byte Write(this byte buffer, ulong value, ref int bitposition, int bits = 64)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
+			System.Diagnostics.Debug.Assert(bitposition + bits <= 8, overrunerror);
 
-			uint offsetsrc = ((uint)value << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
+			uint offsetvalue = ((uint)value << bitposition);
+			uint mask = ((uint)byte.MaxValue >> (8 - bits) << bitposition);
 
 			// Clear bits in buffer we need to write to, then write to them.
 			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
+			_target |= (mask & offsetvalue);
 			buffer = (byte)_target;
 
-			bitposition += bitcount;
+			bitposition += bits;
 			return buffer;
 		}
 
@@ -305,162 +456,161 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ulong src, ref ulong buffer, ref int bitposition, int bitcount = 64)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ulong value, ref ulong buffer, ref int bitposition, int bits = 64)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			ulong offsetsrc = src << bitposition;
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ulong src, ref ulong buffer, int bitposition, int bitcount = 64)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ulong value, ref ulong buffer, int bitposition, int bits = 64)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
+			System.Diagnostics.Debug.Assert(bitposition + bits <= 64, overrunerror);
 
-			ulong offsetsrc = src << bitposition;
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
+			ulong offsetvalue = value << bitposition;
+			ulong mask = ulong.MaxValue >> (64 - bits) << bitposition;
 
 			// Clear bits in buffer we need to write to, then write to them.
 			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
+			buffer |= (mask & offsetvalue);
 		}
+
 
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this uint src, ref ulong buffer, ref int bitposition, int bitcount = 32)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this uint value, ref ulong buffer, ref int bitposition, int bits = 32)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			ulong offsetsrc = ((ulong)src << bitposition);
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this uint src, ref ulong buffer, int bitposition, int bitcount = 32)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this uint value, ref ulong buffer, int bitposition, int bits = 32)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
+			System.Diagnostics.Debug.Assert(bitposition + bits <= 64, overrunerror);
 
-			ulong offsetsrc = ((ulong)src << bitposition);
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
+			ulong offsetvalue = ((ulong)value << bitposition);
+			ulong mask = ulong.MaxValue >> (64 - bits) << bitposition;
 
 			// Clear bits in buffer we need to write to, then write to them.
 			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
+			buffer |= (mask & offsetvalue);
 
 		}
 
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ushort src, ref ulong buffer, ref int bitposition, int bitcount = 16)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ushort value, ref ulong buffer, ref int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			ulong offsetsrc = ((ulong)src << bitposition);
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ushort src, ref ulong buffer, int bitposition, int bitcount = 16)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ushort value, ref ulong buffer, int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
-
-			ulong offsetsrc = ((ulong)src << bitposition);
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this byte src, ref ulong buffer, ref int bitposition, int bitcount = 8)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this byte value, ref ulong buffer, ref int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
-
-			ulong offsetsrc = ((ulong)src << bitposition);
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this byte src, ref ulong buffer, int bitposition, int bitcount = 8)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this byte value, ref ulong buffer, int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 64, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
+		}
 
-			ulong offsetsrc = ((ulong)src << bitposition);
-			ulong mask = ulong.MaxValue >> (64 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
+		/// <summary>
+		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
+		/// Negative numbers will not serialize properly. Use InjectUnsigned for signed values.
+		/// </summary>
+		/// <param name="value">Value to write.</param>
+		/// <param name="buffer">Target of write.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void InjectUnsigned(this long value, ref ulong buffer, ref int bitposition, int bits = 32)
+		{
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
+		/// Negative numbers will not serialize properly. Use InjectUnsigned for signed values.
+		/// </summary>
+		/// <param name="value">Value to write.</param>
+		/// <param name="buffer">Target of write.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void InjectUnsigned(this int value, ref ulong buffer, ref int bitposition, int bits = 32)
+		{
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
+		/// Negative numbers will not serialize properly. Use InjectUnsigned for signed values.
+		/// </summary>
+		/// <param name="value">Value to write.</param>
+		/// <param name="buffer">Target of write.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void InjectUnsigned(this short value, ref ulong buffer, ref int bitposition, int bits = 32)
+		{
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
+		/// Negative numbers will not serialize properly. Use InjectUnsigned for signed values.
+		/// </summary>
+		/// <param name="value">Value to write.</param>
+		/// <param name="buffer">Target of write.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void InjectUnsigned(this sbyte value, ref ulong buffer, ref int bitposition, int bits = 32)
+		{
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 
 		#endregion
@@ -470,164 +620,142 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ulong src, ref uint buffer, ref int bitposition, int bitcount = 64)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ulong value, ref uint buffer, ref int bitposition, int bits = 64)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			uint offsetsrc = (uint)src << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ulong src, ref uint buffer, int bitposition, int bitcount = 64)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ulong value, ref uint buffer, int bitposition, int bits = 64)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			uint offsetsrc = (uint)src << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this uint src, ref uint buffer, ref int bitposition, int bitcount = 32)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this uint value, ref uint buffer, ref int bitposition, int bits = 32)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			uint offsetsrc = (uint)src << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this uint src, ref uint buffer, int bitposition, int bitcount = 32)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this uint value, ref uint buffer, int bitposition, int bits = 32)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			uint offsetsrc = (uint)src << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ushort src, ref uint buffer, ref int bitposition, int bitcount = 16)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ushort value, ref uint buffer, ref int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			uint offsetsrc = (uint)src << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ushort src, ref uint buffer, int bitposition, int bitcount = 16)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ushort value, ref uint buffer, int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			uint offsetsrc = (uint)src << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this byte src, ref uint buffer, ref int bitposition, int bitcount = 8)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this byte value, ref uint buffer, ref int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			uint offsetsrc = (uint)src << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this byte src, ref uint buffer, int bitposition, int bitcount = 8)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this byte value, ref uint buffer, int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 32, overrunerror);
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 
-			uint offsetsrc = (uint)src << bitposition;
-			uint mask = uint.MaxValue >> (32 - bitcount) << bitposition;
-
-			// Clear bits in buffer we need to write to, then write to them.
-			buffer &= ~mask;
-			buffer |= (mask & offsetsrc);
-
-			bitposition += bitcount;
 		}
+
+		/// <summary>
+		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
+		/// Negative numbers will not serialize properly. Use InjectUnsigned for signed values.
+		/// </summary>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void InjectUnsigned(this long value, ref uint buffer, ref int bitposition, int bits = 64)
+		{
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
+		/// Negative numbers will not serialize properly. Use InjectUnsigned for signed values.
+		/// </summary>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void InjectUnsigned(this int value, ref uint buffer, ref int bitposition, int bits = 64)
+		{
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
+		/// Negative numbers will not serialize properly. Use InjectUnsigned for signed values.
+		/// </summary>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void InjectUnsigned(this short value, ref uint buffer, ref int bitposition, int bits = 64)
+		{
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
+		/// Negative numbers will not serialize properly. Use InjectUnsigned for signed values.
+		/// </summary>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void InjectUnsigned(this sbyte value, ref uint buffer, ref int bitposition, int bits = 64)
+		{
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
+		}
+
 		#endregion
 
 		#region Inject UInt16 Buffer
@@ -635,170 +763,90 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ulong src, ref ushort buffer, ref int bitposition, int bitcount = 16)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ulong value, ref ushort buffer, ref int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (ushort)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ulong src, ref ushort buffer, int bitposition, int bitcount = 16)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ulong value, ref ushort buffer, int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (ushort)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this uint src, ref ushort buffer, ref int bitposition, int bitcount = 16)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this uint value, ref ushort buffer, ref int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (ushort)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this uint src, ref ushort buffer, int bitposition, int bitcount = 16)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this uint value, ref ushort buffer, int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (ushort)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ushort src, ref ushort buffer, ref int bitposition, int bitcount = 16)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ushort value, ref ushort buffer, ref int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (ushort)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ushort src, ref ushort buffer, int bitposition, int bitcount = 16)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ushort value, ref ushort buffer, int bitposition, int bits = 16)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (ushort)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this byte src, ref ushort buffer, ref int bitposition, int bitcount = 8)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this byte value, ref ushort buffer, ref int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (ushort)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this byte src, ref ushort buffer, int bitposition, int bitcount = 8)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this byte value, ref ushort buffer, int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 16, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (ushort)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 
 		#endregion
@@ -808,173 +856,93 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ulong src, ref byte buffer, ref int bitposition, int bitcount = 8)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ulong value, ref byte buffer, ref int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (byte)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ulong src, ref byte buffer, int bitposition, int bitcount = 8)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ulong value, ref byte buffer, int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (byte)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this uint src, ref byte buffer, ref int bitposition, int bitcount = 8)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this uint value, ref byte buffer, ref int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (byte)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this uint src, ref byte buffer, int bitposition, int bitcount = 8)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this uint value, ref byte buffer, int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (byte)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ushort src, ref byte buffer, ref int bitposition, int bitcount = 8)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ushort value, ref byte buffer, ref int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (byte)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ushort src, ref byte buffer, int bitposition, int bitcount = 8)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this ushort value, ref byte buffer, int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (byte)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this byte src, ref byte buffer, ref int bitposition, int bitcount = 8)
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this byte value, ref byte buffer, ref int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (byte)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Write position. Writing will begin at this position in the buffer.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this byte src, ref byte buffer, int bitposition, int bitcount = 8)
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
+		public static void Inject(this byte value, ref byte buffer, int bitposition, int bits = 8)
 		{
-			System.Diagnostics.Debug.Assert(bitposition + bitcount <= 8, overrunerror);
-
-			uint offsetsrc = ((uint)src << bitposition);
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount) << bitposition);
-
-			// Clear bits in buffer we need to write to, then write to them.
-			uint _target = buffer & ~mask;
-			_target |= (mask & offsetsrc);
-			buffer = (byte)_target;
-
-			bitposition += bitcount;
+			buffer = Write(buffer, (ulong)value, ref bitposition, bits);
 		}
 		#endregion
 
@@ -983,14 +951,14 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Extract (read/deserialize) a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
 		/// </summary>
-		/// <param name="src">Source primitive buffer to read from.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to return value.</param>
-		/// <param name="bitposition">Auto-incremented reference to the src read bit pointer. Extraction starts at this point in src.</param>
+		/// <param name="value">Source primitive buffer to read from.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to return value.</param>
+		/// <param name="bitposition">Auto-incremented reference to the value read bit pointer. Extraction starts at this point in value.</param>
 		/// <returns>Downcast this ulong return value to the desired type.</returns>
 		[System.Obsolete("Argument order changed")]
-		public static ulong Extract(this ulong src, int bitcount, ref int bitposition)
+		public static ulong Extract(this ulong value, int bits, ref int bitposition)
 		{
-			return Extract(src, bitcount, ref bitposition);
+			return Extract(value, bits, ref bitposition);
 		}
 
 		#endregion
@@ -1000,32 +968,41 @@ namespace emotitron.Compression
 
 
 		/// <summary>
-		/// Extract (read/deserialize) a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
+		/// Read a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
 		/// </summary>
-		/// <param name="src">Source primitive buffer to read from.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to return value.</param>
-		/// <param name="bitposition">Auto-incremented reference to the src read bit pointer. Extraction starts at this point in src.</param>
+		/// <param name="value">Source primitive buffer to read from.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to return value.</param>
+		/// <param name="bitposition">Auto-incremented reference to the value read bit pointer. Read starts at this point in value.</param>
 		/// <returns>Downcast this ulong return value to the desired type.</returns>
-		public static ulong Extract(this ulong src, ref int bitposition, int bitcount)
+		public static ulong Read(this ulong value, ref int bitposition, int bits)
 		{
-			ulong mask = (ulong.MaxValue >> (64 - bitcount));
-			ulong fragment = (((ulong)src >> bitposition) & mask);
+			ulong mask = (ulong.MaxValue >> (64 - bits));
+			ulong fragment = (((ulong)value >> bitposition) & mask);
 
-			bitposition += bitcount;
+			bitposition += bits;
+			return fragment;
+		}
+		[System.Obsolete("Use Read instead.")]
+		public static ulong Extract(this ulong value, ref int bitposition, int bits)
+		{
+			ulong mask = (ulong.MaxValue >> (64 - bits));
+			ulong fragment = (((ulong)value >> bitposition) & mask);
+
+			bitposition += bits;
 			return fragment;
 		}
 
 		/// <summary>
-		/// Extract and return bits from src. 
+		/// Extract and return bits from value. 
 		/// </summary>
-		/// <param name="src">Source primitive.</param>
-		/// <param name="bitcount">How many lower order bits to read.</param>
+		/// <param name="value">Source primitive.</param>
+		/// <param name="bits">How many lower order bits to read.</param>
 		/// <returns>Cast the return value to the desired type.</returns>
 		[System.Obsolete("Always include the [ref int bitposition] argument. Extracting from position 0 would be better handled with a mask operation.")]
-		public static ulong Extract(this ulong src, int bitcount)
+		public static ulong Extract(this ulong value, int bits)
 		{
-			ulong mask = (ulong.MaxValue >> (64 - bitcount));
-			ulong fragment = ((ulong)src  & mask);
+			ulong mask = (ulong.MaxValue >> (64 - bits));
+			ulong fragment = ((ulong)value & mask);
 
 			return fragment;
 		}
@@ -1036,31 +1013,40 @@ namespace emotitron.Compression
 
 
 		/// <summary>
-		/// Extract (read/deserialize) a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
+		/// Read a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
 		/// </summary>
-		/// <param name="src">Source primitive buffer to read from.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to return value.</param>
-		/// <param name="bitposition">Auto-incremented reference to the src read bit pointer. Extraction starts at this point in src.</param>
+		/// <param name="value">Source primitive buffer to read from.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to return value.</param>
+		/// <param name="bitposition">Auto-incremented reference to the value read bit pointer. Read starts at this point in value.</param>
 		/// <returns>Cast this uint return value to the desired type.</returns>
-		public static uint Extract(this uint src, ref int bitposition, int bitcount)
+		public static uint Read(this uint value, ref int bitposition, int bits)
 		{
-			uint mask = (uint.MaxValue >> (32 - bitcount));
-			uint fragment = (((uint)src >> bitposition) & mask);
+			uint mask = (uint.MaxValue >> (32 - bits));
+			uint fragment = (((uint)value >> bitposition) & mask);
 
-			bitposition += bitcount;
+			bitposition += bits;
+			return fragment;
+		}
+		[System.Obsolete("Use Read instead.")]
+		public static uint Extract(this uint value, ref int bitposition, int bits)
+		{
+			uint mask = (uint.MaxValue >> (32 - bits));
+			uint fragment = (((uint)value >> bitposition) & mask);
+
+			bitposition += bits;
 			return fragment;
 		}
 		/// <summary>
-		/// Extract and return bits from src. 
+		/// Extract and return bits from value. 
 		/// </summary>
-		/// <param name="src">Source primitive.</param>
-		/// <param name="bitcount">How many lower order bits to read.</param>
+		/// <param name="value">Source primitive.</param>
+		/// <param name="bits">How many lower order bits to read.</param>
 		/// <returns>Cast the return value to the desired type.</returns>
 		[System.Obsolete("Always include the [ref int bitposition] argument. Extracting from position 0 would be better handled with a mask operation.")]
-		public static uint Extract(this uint src, int bitcount)
+		public static uint Extract(this uint value, int bits)
 		{
-			uint mask = (uint.MaxValue >> (32 - bitcount));
-			uint fragment = ((uint)src & mask);
+			uint mask = (uint.MaxValue >> (32 - bits));
+			uint fragment = ((uint)value & mask);
 
 			return fragment;
 		}
@@ -1070,18 +1056,27 @@ namespace emotitron.Compression
 		#region Extract - Uint16 Buffer
 
 		/// <summary>
-		/// Extract (read/deserialize) a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
+		/// Read a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
 		/// </summary>
-		/// <param name="src">Source primitive buffer to read from.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to return value.</param>
-		/// <param name="bitposition">Auto-incremented reference to the src read bit pointer. Extraction starts at this point in src.</param>
+		/// <param name="value">Source primitive buffer to read from.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to return value.</param>
+		/// <param name="bitposition">Auto-incremented reference to the value read bit pointer. Read starts at this point in value.</param>
 		/// <returns>Cast this ushort return value to the desired type.</returns>
-		public static uint Extract(this ushort src, ref int bitposition, int bitcount)
+		public static uint Read(this ushort value, ref int bitposition, int bits)
 		{
-			uint mask = ((uint)ushort.MaxValue >> (16 - bitcount));
-			uint fragment = (((uint)src >> bitposition) & mask);
+			uint mask = ((uint)ushort.MaxValue >> (16 - bits));
+			uint fragment = (((uint)value >> bitposition) & mask);
 
-			bitposition += bitcount;
+			bitposition += bits;
+			return fragment;
+		}
+		[System.Obsolete("Use Read instead.")]
+		public static uint Extract(this ushort value, ref int bitposition, int bits)
+		{
+			uint mask = ((uint)ushort.MaxValue >> (16 - bits));
+			uint fragment = (((uint)value >> bitposition) & mask);
+
+			bitposition += bits;
 			return fragment;
 		}
 
@@ -1090,31 +1085,40 @@ namespace emotitron.Compression
 		#region Extract - Uint8 Buffer
 
 		/// <summary>
-		/// Extract (read/deserialize) a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
+		/// Read a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
 		/// </summary>
-		/// <param name="src">Source primitive buffer to read from.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to return value.</param>
-		/// <param name="bitposition">Auto-incremented reference to the src read bit pointer. Extraction starts at this point in src.</param>
+		/// <param name="value">Source primitive buffer to read from.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to return value.</param>
+		/// <param name="bitposition">Auto-incremented reference to the value read bit pointer. Read starts at this point in value.</param>
 		/// <returns>Downcast this uint return value to the desired type.</returns>
-		public static uint Extract(this byte src, ref int bitposition, int bitcount)
+		public static uint Read(this byte value, ref int bitposition, int bits)
 		{
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount));
-			uint fragment = (((uint)src >> bitposition) & mask);
+			uint mask = ((uint)byte.MaxValue >> (8 - bits));
+			uint fragment = (((uint)value >> bitposition) & mask);
 
-			bitposition += bitcount;
+			bitposition += bits;
+			return fragment;
+		}
+		[System.Obsolete("Use Read instead.")]
+		public static uint Extract(this byte value, ref int bitposition, int bits)
+		{
+			uint mask = ((uint)byte.MaxValue >> (8 - bits));
+			uint fragment = (((uint)value >> bitposition) & mask);
+
+			bitposition += bits;
 			return fragment;
 		}
 		/// <summary>
-		/// Extract and return bits from src. 
+		/// Extract and return bits from value. 
 		/// </summary>
-		/// <param name="src">Source primitive.</param>
-		/// <param name="bitcount">How many lower order bits to read.</param>
+		/// <param name="value">Source primitive.</param>
+		/// <param name="bits">How many lower order bits to read.</param>
 		/// <returns>Cast the return value to the desired type.</returns>
 		[System.Obsolete("Always include the [ref int bitposition] argument. Extracting from position 0 would be better handled with a mask operation.")]
-		public static byte Extract(this byte src, int bitcount)
+		public static byte Extract(this byte value, int bits)
 		{
-			uint mask = ((uint)byte.MaxValue >> (8 - bitcount));
-			uint fragment = ((uint)src & mask);
+			uint mask = ((uint)byte.MaxValue >> (8 - bits));
+			uint fragment = ((uint)value & mask);
 
 			return (byte)fragment;
 		}
@@ -1132,15 +1136,20 @@ namespace emotitron.Compression
 		/// <param name="bitposition">Auto-incremented read position for the buffer (in bits)</param>
 		public static void Inject(this float f, ref ulong buffer, ref int bitposition)
 		{
-			((ulong)(ByteConverter)f).Inject(ref buffer, ref bitposition, 32);
+			buffer = Write(buffer, ((ulong)(ByteConverter)f), ref bitposition, 32);
 		}
 
 		/// <summary>
-		/// Extract a float from a bitpacked primitive(src) starting at bitposition.
+		/// REad a float from a bitpacked primitive(value) starting at bitposition.
 		/// </summary>
 		/// <param name="buffer"></param>
 		/// <param name="bitposition">Auto-incremented read position for the buffer (in bits)</param>
 		/// <returns></returns>
+		public static float ReadFloat(this ulong buffer, ref int bitposition)
+		{
+			return (ByteConverter)Read(buffer, ref bitposition, 32);
+		}
+		[System.Obsolete("Use Read instead.")]
 		public static float ExtractFloat(this ulong buffer, ref int bitposition)
 		{
 			return (ByteConverter)Extract(buffer, ref bitposition, 32);
@@ -1159,7 +1168,7 @@ namespace emotitron.Compression
 		public static ushort InjectAsHalfFloat(this float f, ref ulong buffer, ref int bitposition)
 		{
 			ushort c = HalfUtilities.Pack(f);
-			c.Inject(ref buffer, ref bitposition, 16);
+			buffer = Write(buffer, c, ref bitposition, 16);
 			return c;
 		}
 		/// <summary>
@@ -1171,27 +1180,39 @@ namespace emotitron.Compression
 		public static ushort InjectAsHalfFloat(this float f, ref uint buffer, ref int bitposition)
 		{
 			ushort c = HalfUtilities.Pack(f);
-			c.Inject(ref buffer, ref bitposition, 16);
+			buffer = Write(buffer, c, ref bitposition, 16);
 			return c;
 		}
 
 		/// <summary>
-		/// Extract a float from a bitpacked primitive(src) starting at bitposition.
+		/// Read a float from a bitpacked primitive(value) starting at bitposition.
 		/// </summary>
-		/// <param name="buffer">Source buffer to extract from.</param>
+		/// <param name="buffer">Source buffer to read from.</param>
 		/// <param name="bitposition">Auto-incremented read position for the buffer (in bits)</param>
 		/// <returns></returns>
+		public static float ReadHalfFloat(this ulong buffer, ref int bitposition)
+		{
+			ushort c = (ushort)Read(buffer, ref bitposition, 16);
+			return HalfUtilities.Unpack(c);
+		}
+		[System.Obsolete("Use Read instead.")]
 		public static float ExtractHalfFloat(this ulong buffer, ref int bitposition)
 		{
 			ushort c = (ushort)Extract(buffer, ref bitposition, 16);
 			return HalfUtilities.Unpack(c);
 		}
 		/// <summary>
-		/// Extract a float from a bitpacked primitive(src) starting at bitposition.
+		/// Read a float from a bitpacked primitive(value) starting at bitposition.
 		/// </summary>
-		/// <param name="buffer">Source buffer to extract from.</param>
+		/// <param name="buffer">Source buffer to read from.</param>
 		/// <param name="bitposition">Auto-incremented read position for the buffer (in bits)</param>
 		/// <returns></returns>
+		public static float ReadHalfFloat(this uint buffer, ref int bitposition)
+		{
+			ushort c = (ushort)Read(buffer, ref bitposition, 16);
+			return HalfUtilities.Unpack(c);
+		}
+		[System.Obsolete("Use Read instead.")]
 		public static float ExtractHalfFloat(this uint buffer, ref int bitposition)
 		{
 			ushort c = (ushort)Extract(buffer, ref bitposition, 16);
@@ -1206,26 +1227,26 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
 		[System.Obsolete("Argument order changed")]
-		public static void Inject(this ulong src, ref uint buffer, int bitcount, ref int bitposition)
+		public static void Inject(this ulong value, ref uint buffer, int bits, ref int bitposition)
 		{
-			Inject(src, ref buffer, ref bitposition, bitcount);
+			Inject(value, ref buffer, ref bitposition, bits);
 		}
 		/// <summary>
 		/// Inject (write/serialize) x bits of source value into a target primitive (the buffer) starting at bitposition.
 		/// </summary>
-		/// <param name="src">Value to write.</param>
+		/// <param name="value">Value to write.</param>
 		/// <param name="buffer">Target of write.</param>
-		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bitcount added to it.</param>
-		/// <param name="bitcount">Number of lower order bits to copy from source to target buffer.</param>
+		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
+		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
 		[System.Obsolete("Argument order changed")]
-		public static void Inject(this ulong src, ref ulong buffer, int bitcount, ref int bitposition)
+		public static void Inject(this ulong value, ref ulong buffer, int bits, ref int bitposition)
 		{
-			Inject(src, ref buffer, ref bitposition, bitcount);
+			Inject(value, ref buffer, ref bitposition, bits);
 		}
 		#endregion
 

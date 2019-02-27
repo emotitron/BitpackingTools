@@ -18,8 +18,18 @@ public class BenchmarkTests : MonoBehaviour
 	private static Bitstream bs = new Bitstream();
 	private static Bitstream bs2 = new Bitstream();
 
-	public static void TestAsArray()
+	public unsafe static void TestAsArray()
 	{
+		const int size = 63;
+		ulong val1 = 1;
+		ulong val2 = 2;
+		ulong val3 = 3;
+		ulong val4 = 4;
+		ulong val5 = 5;
+		ulong val6 = 6;
+		ulong val7 = 7;
+		ulong val8 = 8;
+		ulong val9 = 9;
 		//int pos = 0;
 		//buffer.Write(1, ref pos, 8);
 		//buffer.Write(3, ref pos, 8);
@@ -28,23 +38,95 @@ public class BenchmarkTests : MonoBehaviour
 
 		//Debug.Log(buffer.IndexAsUInt64(0));
 		//Debug.Log(buffer.GetIndexAsUlongUnsafe(0));
+		var watch2 = System.Diagnostics.Stopwatch.StartNew();
+		for (int loop = 0; loop < LOOP; ++loop)
+		{
+			int pos = 0;
+			buffer.Write(val1, ref pos, size);
+			buffer.Write(val2, ref pos, size);
+			buffer.Write(val3, ref pos, size);
+			buffer.Write(val4, ref pos, size);
+			buffer.Write(val5, ref pos, size);
+			buffer.Write(val6, ref pos, size);
+			buffer.Write(val7, ref pos, size);
+			buffer.Write(val8, ref pos, size);
+			buffer.Write(val9, ref pos, size);
 
-		int pos = 0;
-		ubuffer.Write(1, ref pos, 32);
-		ubuffer.Write(3, ref pos, 32);
-		ubuffer.Write(7, ref pos, 32);
-		ubuffer.Write(15, ref pos, 32);
-		pos = 0;
-		Debug.Log(ubuffer.Read(ref pos, 32));
-		Debug.Log(ubuffer.Read(ref pos, 32));
-		Debug.Log(ubuffer.Read(ref pos, 32));
-		Debug.Log(ubuffer.Read(ref pos, 32));
+			pos = 0;
+			buffer.Read(ref pos, size);
+			buffer.Read(ref pos, size);
+			buffer.Read(ref pos, size);
+			buffer.Read(ref pos, size);
+			buffer.Read(ref pos, size);
+			buffer.Read(ref pos, size);
+			buffer.Read(ref pos, size);
+			buffer.Read(ref pos, size);
+			buffer.Read(ref pos, size);
+		}
+		watch2.Stop();
+		Debug.Log("Safe " + watch2.ElapsedMilliseconds);
 
-		Debug.Log(ubuffer.IndexAsUInt32(0));
-		Debug.Log(ubuffer.IndexAsUInt32(1));
-		Debug.Log(ubuffer.IndexAsUInt32(2));
-		Debug.Log(ubuffer.IndexAsUInt32(3));
+		var watch1 = System.Diagnostics.Stopwatch.StartNew();
+		fixed (byte* bPtr = buffer)
+		{
+			ulong* uPtr = (ulong*)bPtr;
+			for (int loop = 0; loop < LOOP; ++loop)
+			{
+				int pos = 0;
+				//ArraySerializeExt.WriteUnsafe(uPtr, val1, ref pos, size);
+				//ArraySerializeExt.WriteUnsafe(uPtr, val2, ref pos, size);
+				//ArraySerializeExt.WriteUnsafe(uPtr, val3, ref pos, size);
+				//ArraySerializeExt.WriteUnsafe(uPtr, val4, ref pos, size);
+				//ArraySerializeExt.WriteUnsafe(uPtr, val5, ref pos, size);
+				//ArraySerializeExt.WriteUnsafe(uPtr, val6, ref pos, size);
+				//ArraySerializeExt.WriteUnsafe(uPtr, val7, ref pos, size);
+				//ArraySerializeExt.WriteUnsafe(uPtr, val8, ref pos, size);
+				//ArraySerializeExt.WriteUnsafe(uPtr, val9, ref pos, size);
+
+				val1.InjectUnsafe(uPtr, ref pos, size);
+				val2.InjectUnsafe(uPtr, ref pos, size);
+				val3.InjectUnsafe(uPtr, ref pos, size);
+				val4.InjectUnsafe(uPtr, ref pos, size);
+				val5.InjectUnsafe(uPtr, ref pos, size);
+				val6.InjectUnsafe(uPtr, ref pos, size);
+				val7.InjectUnsafe(uPtr, ref pos, size);
+				val8.InjectUnsafe(uPtr, ref pos, size);
+				val9.InjectUnsafe(uPtr, ref pos, size);
+
+
+				pos = 0;
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+				ArraySerializeExt.ReadUnsafe(uPtr, ref pos, size);
+			}
+		}
+		
+		watch1.Stop();
+		Debug.Log("UnSafe " + watch1.ElapsedMilliseconds);
+
 		return;
+
+		//int pos = 0;
+		//ubuffer.Write(1, ref pos, 3);
+		//ubuffer.Write(3, ref pos, 33);
+		//ubuffer.Write(7, ref pos, 60);
+		//ubuffer.Write(15, ref pos, 60);
+		//pos = 0;
+		//ubuffer.Read(ref pos, 32);
+		//Debug.Log(ubuffer.Read(ref pos, 32));
+		//Debug.Log(ubuffer.Read(ref pos, 32));
+		//Debug.Log(ubuffer.Read(ref pos, 32));
+
+		//ubuffer.IndexAsUInt32(0);
+		//ubuffer.IndexAsUInt32(1);
+		//ubuffer.IndexAsUInt32(2);
+		//ubuffer.IndexAsUInt32(3);
 	}
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
