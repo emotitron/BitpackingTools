@@ -25,14 +25,14 @@ The Array Serializer extension lets you bitpack directly to and from byte[], uin
 
 ## PrimitiveSerializeExt class
 
-The Primitive Serializer extension lets you bitpack directly to and from ulong, uint, ushort and byte primitives. Because there is no wrapper class such as Bitstream, you need to maintain read/write pointers. The methods automatically increment these pointers for you however, through the ref to them in the arguments.
+The Primitive Serializer extension lets you bitpack directly to and from ulong, uint, ushort and byte primitives. Because there is no wrapper class such as Bitstream, you need to maintain read/write pointers. The methods automatically increment these pointers for you however, through the ref to them in the arguments. NOTE: Extension methods cannot pass the first argument reference so the Write() return value must be applied to the buffer being written to.
 
 ### Basic Usage:
 ```cs
   ulong myBuffer = 0;
   
   int writepos = 0;
-  // Note that primitives are reference types, need to apply the return value of extensions.
+  // Note that primitives are reference types, so the return value needs to be applied.
   myBuffer = myBuffer.WritetBool(true, ref writepos);
   myBuffer = myBuffer.WriteSigned(-666, ref writepos, 11);
   myBuffer = myBuffer.Write(999, ref writepos, 10);
@@ -44,9 +44,10 @@ The Primitive Serializer extension lets you bitpack directly to and from ulong, 
 ```
 
 ### Alternative Usage
-An alternative to Write is Inject, which is an extension for the value type being written.
+An alternative to Write() is Inject(), which has the value being written as the first argument, allowing us to pass the buffer as a reference. NOTE: There is no return value on this method, as the buffer is passed by reference and is altered by the method.
 ```cs
   int writepos = 0;
+  // Note that the buffer is passed by reference, and is altered by the method.
   true.Inject(ref myBuffer, ref writepos);
   (-666).InjectSigned(ref myBuffer, ref writepos, 11);
   999.InjectUnsigned(ref myBuffer, ref writepos, 11);
