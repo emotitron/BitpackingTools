@@ -633,6 +633,35 @@ namespace emotitron.Compression
 
 		#region ReadOut UInt64[] To Array
 
+
+		/// <summary>
+		/// Primary ReadOutUnsafe method. WARNING: No bounds checking. Use with caution. Cast array pointers to ulong*.
+		/// </summary>
+		/// <param name="sourcePtr"></param>
+		/// <param name="sourcePos"></param>
+		/// <param name="targetPtr"></param>
+		/// <param name="targetPos"></param>
+		/// <param name="bits"></param>
+		public unsafe static void ReadOutUnsafe(ulong* sourcePtr, int sourcePos, ulong* targetPtr, ref int targetPos, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			int readpos = sourcePos;
+			int remaining = bits;
+
+			while (remaining > 0)
+			{
+				int cnt = remaining > 64 ? 64 : remaining;
+				ulong val = ReadUnsafe(sourcePtr, ref readpos, cnt);
+				WriteUnsafe(targetPtr, val, ref targetPos, cnt);
+
+				remaining -= cnt;
+			}
+
+			targetPos += bits;
+		}
+
 		/// <summary>
 		/// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
 		/// as they will be treated as ulong[] in unsafe.
@@ -678,7 +707,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOut(this ulong[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -714,7 +743,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOut(this ulong[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -753,7 +782,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOut(this uint[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -790,7 +819,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOut(this uint[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -828,7 +857,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOut(this uint[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -869,7 +898,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOut(this byte[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -906,7 +935,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOut(this byte[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -943,7 +972,7 @@ namespace emotitron.Compression
 		/// <param name="target"></param>
 		/// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
 		/// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		public unsafe static void ReadOut(this byte[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
+		public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
 		{
 			if (bits == 0)
 				return;
