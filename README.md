@@ -22,8 +22,8 @@ The Array Serializer extension lets you bitpack directly to and from byte[], uin
   int restoredval1 = myBuffer.Read(ref readpos, 10);
   int restoredval2 = myBuffer.Read(ref readpos, 10);
 ```
-### Advanced Usage
-For sequential writes and reads of a byte[] or uint[] arrays, there are unsafe methods that internally treat these arrays as a ulong[], resulting in up to 4x faster reads and writes.
+### Advanced Usage (Unsafe)
+For sequential writes and reads of a byte[] or uint[] arrays, there are unsafe methods that internally treat these arrays as a ulong[], resulting in up to 4x faster reads and writes. These are all contained in ArraySerializerUnsafe.cs, which can be deleted for projects where you don't want to enable Allow Unsafe Code.
 ```cs
 byte[] myBuffer = byte[100];
 uint val1 = 666;
@@ -49,7 +49,7 @@ fixed (byte* bPtr = myBuffer)
 
 ## PrimitiveSerializeExt class
 
-The Primitive Serializer extension lets you bitpack directly to and from ulong, uint, ushort and byte primitives. Because there is no wrapper class such as Bitstream, you need to maintain read/write pointers. The methods automatically increment these pointers for you however, through the ref to them in the arguments. NOTE: Extension methods cannot pass the first argument reference so the Write() return value must be applied to the buffer being written to.
+The Primitive Serializer extension lets you bitpack directly to and from ulong, uint, ushort and byte primitives. Because there is no wrapper class such as Bitstream, you need to maintain read/write pointers. The methods automatically increment the pointer for you, as it is passed to the methods as a reference. NOTE: Extension methods cannot pass the first argument reference so the Write() return value must be applied to the buffer being written to.
 
 ### Basic Usage:
 ```cs
@@ -74,6 +74,6 @@ An alternative to Write() is Inject(), which has the value being written as the 
   // Note that the buffer is passed by reference, and is altered by the method.
   true.Inject(ref myBuffer, ref writepos);
   (-666).InjectSigned(ref myBuffer, ref writepos, 11);
-  999.InjectUnsigned(ref myBuffer, ref writepos, 11);
+  999.InjectUnsigned(ref myBuffer, ref writepos, 10);
  ```
 
