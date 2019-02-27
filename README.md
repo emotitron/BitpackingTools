@@ -38,12 +38,12 @@ fixed (byte* bPtr = myBuffer)
   // Two different write methods. Inject() and Write(). 
   // Both are about the same speed, so it's up to personal preference.
   val1.InjectUnsafe(uPtr, ref writepos, 10);
-  ArraySerializeExt.WriteSigned(uPtr, val2, ref writepos, 11);
+  ArraySerializeUnsafe.WriteSigned(uPtr, val2, ref writepos, 11);
 
   readpos = 0;
   // Unsafe pointers can't be the first argument of extensions, so there is no pretty way to do this.
-  uint restored1 = (uint)ArraySerializeExt.ReadUnsafe(uPtr, ref readpos, 10);
-  int restored2 = ArraySerializeExt.ReadSigned(uPtr, ref readpos, 11);
+  uint restored1 = (uint)ArraySerializeUnsafe.ReadUnsafe(uPtr, ref readpos, 10);
+  int restored2 = ArraySerializeUnsafe.ReadSigned(uPtr, ref readpos, 11);
 }
 ```
 
