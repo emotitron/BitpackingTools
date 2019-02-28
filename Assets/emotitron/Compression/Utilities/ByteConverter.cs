@@ -1,7 +1,9 @@
 ﻿/*
 * The MIT License (MIT)
 * 
-* Copyright (c) 2018-2019 Davin Carten [emotitron] (davincarten@gmail.com)
+* 
+* Copyright (c) 2012-2013 Fredrik Holmstrom (fredrik.johan.holmstrom@gmail.com)
+* Extended 2018-2019 Davin Carten [emotitron] (davincarten@gmail.com)
 * 
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +55,6 @@ namespace emotitron.Compression
 		[FieldOffset(0)]
 		public UInt64 uint64;
 
-
 		[FieldOffset(0)]
 		public Byte byte0;
 		[FieldOffset(1)]
@@ -70,6 +71,12 @@ namespace emotitron.Compression
 		public Byte byte6;
 		[FieldOffset(7)]
 		public Byte byte7;
+
+		/// <summary>
+		/// The upper 4 bytes of this 8 byte struct, returned as a uint.
+		/// </summary>
+		[FieldOffset(4)]
+		public uint uint16_B;
 
 		/// <summary>
 		/// A Byte indexer.
@@ -229,7 +236,7 @@ namespace emotitron.Compression
 		public static implicit operator Int64(ByteConverter bc) { return bc.int64; }
 		public static implicit operator Single(ByteConverter bc) { return bc.float32; }
 		public static implicit operator Double(ByteConverter bc) { return bc.float64; }
-		public static implicit operator Boolean(ByteConverter bc) { return bc.int16 != 0; }
+		public static implicit operator Boolean(ByteConverter bc) { return bc.int32 != 0; }
 
 		#endregion
 	}

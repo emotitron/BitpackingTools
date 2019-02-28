@@ -22,7 +22,6 @@
 * THE SOFTWARE.
 */
 
-
 namespace emotitron.Compression
 {
 

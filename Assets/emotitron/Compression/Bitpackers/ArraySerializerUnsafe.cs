@@ -23,7 +23,6 @@
 */
 
 
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -57,7 +56,6 @@ namespace emotitron.Compression
 		}
 
 		#endregion
-
 
 		/// <summary>
 		/// Primary Unsafe writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
@@ -201,10 +199,7 @@ namespace emotitron.Compression
 			return;
 		}
 
-
-
 		#region ReadOut UInt64[] To Array
-
 
 		/// <summary>
 		/// Primary ReadOutUnsafe method. WARNING: No bounds checking. Use with caution. Cast array pointers to ulong*.
@@ -343,7 +338,6 @@ namespace emotitron.Compression
 		}
 
 		#endregion
-
 
 		#region ReadOut UInt32[] To Array
 
@@ -576,7 +570,5 @@ namespace emotitron.Compression
 		}
 
 		#endregion
-
 	}
-
 }
