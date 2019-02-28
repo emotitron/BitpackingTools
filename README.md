@@ -11,16 +11,16 @@ The Array Serializer extension lets you bitpack directly to and from byte[], uin
 ### Basic Usage:
 ```cs
   byte[] myBuffer = new byte[64];
-  
-  int writepos = 0;
-  myBuffer.WriteBool(true, ref writepos);
-  myBuffer.Write(666, ref writepos, 10);
-  myBuffer.Write(999, ref writepos, 10);
-  
-  int readpos = 0;
-  bool restoredbool = myBuffer.ReadBool(ref readpos);
-  int restoredval1 = myBuffer.Read(ref readpos, 10);
-  int restoredval2 = myBuffer.Read(ref readpos, 10);
+
+int writepos = 0;
+myBuffer.WriteBool(true, ref writepos);
+myBuffer.WriteSigned(-666, ref writepos, 11);
+myBuffer.Write(999, ref writepos, 10);
+
+int readpos = 0;
+bool restoredbool = myBuffer.ReadBool(ref readpos);
+int restoredval1 = myBuffer.ReadSigned(ref readpos, 11);
+uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
 ```
 ### Advanced Usage (Unsafe)
 For sequential writes and reads of a byte[] or uint[] arrays, there are unsafe methods that internally treat these arrays as a ulong[], resulting in up to 4x faster reads and writes. These are all contained in ArraySerializerUnsafe.cs, which can be deleted for projects where you don't want to enable Allow Unsafe Code.
