@@ -14,6 +14,22 @@ public class BenchmarkTests : MonoBehaviour
 	
 	public unsafe static void TestAsArray()
 	{
+
+byte[] myBuffer = new byte[64];
+
+int writepos = 0;
+myBuffer.WriteBool(true, ref writepos);
+myBuffer.WriteSigned(-666, ref writepos, 10);
+myBuffer.Write(999, ref writepos, 10);
+
+int readpos = 0;
+bool restoredbool = myBuffer.ReadBool(ref readpos);
+int restoredval1 = myBuffer.ReadSigned(ref readpos, 10);
+uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
+
+
+
+
 		const int size = 63;
 		ulong val1 = 1;
 		int val2 = -2;

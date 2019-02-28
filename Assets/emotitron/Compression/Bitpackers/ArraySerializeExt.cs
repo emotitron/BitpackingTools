@@ -49,16 +49,6 @@ namespace emotitron.Compression
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.Write(zigzag, ref bitposition, bits);
 		}
-		//public unsafe static void WriteSigned(ulong* buffer, int value, ref int bitposition, int bits)
-		//{
-		//	uint zigzag = (uint)((value << 1) ^ (value >> 31));
-		//	WriteUnsafe(buffer, zigzag, ref bitposition, bits);
-		//}
-		//public unsafe static void InjectSigned(this int value, ulong* buffer, ref int bitposition, int bits)
-		//{
-		//	uint zigzag = (uint)((value << 1) ^ (value >> 31));
-		//	WriteUnsafe(buffer, zigzag, ref bitposition, bits);
-		//}
 
 		public static int ReadSigned(this byte[] buffer, ref int bitposition, int bits)
 		{
@@ -78,18 +68,6 @@ namespace emotitron.Compression
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
-		//public unsafe static int ReadSigned(ulong* uPtr, ref int bitposition, int bits)
-		//{
-		//	uint value = (uint)ReadUnsafe(uPtr, ref bitposition, bits);
-		//	int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
-		//	return zagzig;
-		//}
-		//public unsafe static int ExtractSigned(ulong* uPtr, ref int bitposition, int bits)
-		//{
-		//	uint value = (uint)ReadUnsafe(uPtr, ref bitposition, bits);
-		//	int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
-		//	return zagzig;
-		//}
 
 		#endregion
 
@@ -402,7 +380,7 @@ namespace emotitron.Compression
 
 		#endregion
 
-		#region Secondary Readers
+		#region Secondary Writers
 
 		public static void WriteBool(this ulong[] buffer, bool b, ref int bitposition)
 		{
@@ -584,22 +562,27 @@ namespace emotitron.Compression
 		#endregion
 
 		#region Secondary Readers
-
+		
+		// Ulong
+		[System.Obsolete("Just use Read(), it return a ulong already.")]
 		public static ulong ReadUInt64(this byte[] buffer, ref int bitposition, int bits = 64)
 		{
 			return Read(buffer, ref bitposition, bits);
 		}
 
+		[System.Obsolete("Just use Read(), it return a ulong already.")]
 		public static ulong ReadUInt64(this uint[] buffer, ref int bitposition, int bits = 64)
 		{
 			return Read(buffer, ref bitposition, bits);
 		}
 
+		[System.Obsolete("Just use Read(), it return a ulong already.")]
 		public static ulong ReadUInt64(this ulong[] buffer, ref int bitposition, int bits = 64)
 		{
 			return Read(buffer, ref bitposition, bits);
 		}
 
+		// UInt
 		public static uint ReadUInt32(this byte[] buffer, ref int bitposition, int bits = 32)
 		{
 			return (uint)Read(buffer, ref bitposition, bits);
@@ -610,11 +593,44 @@ namespace emotitron.Compression
 			return (uint)Read(buffer, ref bitposition, bits);
 		}
 
-		public static uint ReadUInt32(this ulong[] buffer, ref int bitposition, int bits)
+		public static uint ReadUInt32(this ulong[] buffer, ref int bitposition, int bits = 32)
 		{
 			return (uint)Read(buffer, ref bitposition, bits);
 		}
 
+		// UShort
+		public static ushort ReadUInt16(this byte[] buffer, ref int bitposition, int bits = 16)
+		{
+			return (ushort)Read(buffer, ref bitposition, bits);
+		}
+
+		public static ushort ReadUInt16(this uint[] buffer, ref int bitposition, int bits = 16)
+		{
+			return (ushort)Read(buffer, ref bitposition, bits);
+		}
+
+		public static ushort ReadUInt16(this ulong[] buffer, ref int bitposition, int bits = 16)
+		{
+			return (ushort)Read(buffer, ref bitposition, bits);
+		}
+
+		//Byte
+		public static byte ReadByte(this byte[] buffer, ref int bitposition, int bits = 8)
+		{
+			return (byte)Read(buffer, ref bitposition, bits);
+		}
+
+		public static byte ReadByte(this uint[] buffer, ref int bitposition, int bits = 32)
+		{
+			return (byte)Read(buffer, ref bitposition, bits);
+		}
+
+		public static byte ReadByte(this ulong[] buffer, ref int bitposition, int bits)
+		{
+			return (byte)Read(buffer, ref bitposition, bits);
+		}
+
+		// Bool
 		public static bool ReadBool(this ulong[] buffer, ref int bitposition)
 		{
 			return Read(buffer, ref bitposition, 1) == 1 ? true : false;
@@ -628,378 +644,143 @@ namespace emotitron.Compression
 			return Read(buffer, ref bitposition, 1) == 1 ? true : false;
 		}
 
-		#endregion
-
-		#region ReadOut UInt64[] To Array
-
-		///// <summary>
-		///// Primary ReadOutUnsafe method. WARNING: No bounds checking. Use with caution. Cast array pointers to ulong*.
-		///// </summary>
-		///// <param name="sourcePtr"></param>
-		///// <param name="sourcePos"></param>
-		///// <param name="targetPtr"></param>
-		///// <param name="targetPos"></param>
-		///// <param name="bits"></param>
-		//public unsafe static void ReadOutUnsafe(ulong* sourcePtr, int sourcePos, ulong* targetPtr, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
-
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
-
-		//	while (remaining > 0)
-		//	{
-		//		int cnt = remaining > 64 ? 64 : remaining;
-		//		ulong val = ReadUnsafe(sourcePtr, ref readpos, cnt);
-		//		WriteUnsafe(targetPtr, val, ref targetPos, cnt);
-
-		//		remaining -= cnt;
-		//	}
-
-		//	targetPos += bits;
-		//}
-
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
-
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
-
-		//	fixed (ulong* sPtr = source)
-		//	fixed (byte* _tPtr = target)
-		//	{
-		//		ulong* tPtr = (ulong*)_tPtr;
-
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
-
-		//			remaining -= cnt;
-		//		}
-		//	}
-
-		//	targetPos += bits;
-		//}
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
-
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
-
-		//	fixed (ulong* sPtr = source)
-		//	fixed (uint* _tPtr = target)
-		//	{
-		//		ulong* tPtr = (ulong*)_tPtr;
-
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
-
-		//			remaining -= cnt;
-		//		}
-		//	}
-
-		//	targetPos += bits;
-		//}
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this ulong[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
-
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
-
-		//	fixed (ulong* sPtr = source)
-		//	fixed (ulong* tPtr = target)
-		//	{
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
-
-		//			remaining -= cnt;
-		//		}
-		//	}
-
-		//	targetPos += bits;
-		//}
+		// Char
+		public static char ReadChar(this ulong[] buffer, ref int bitposition)
+		{
+			return (char)Read(buffer, ref bitposition, 16);
+		}
+		public static char ReadChar(this uint[] buffer, ref int bitposition)
+		{
+			return (char)Read(buffer, ref bitposition, 16);
+		}
+		public static char ReadChar(this byte[] buffer, ref int bitposition)
+		{
+			return (char)Read(buffer, ref bitposition, 16);
+		}
 
 		#endregion
 
-		//#region ReadOut UInt32[] To Array
+		#region ReadOut Safe
 
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
+		/// <summary>
+		/// Read the contents of one array buffer to another. This safe version doesn't use Unsafe, and may be up to 3x slower than ReadArrayOutUnsafe().
+		/// </summary>
+		/// <param name="source">Source array to copy from.</param>
+		/// <param name="srcStartPos">Bit position in source to start reading frome.</param>
+		/// <param name="target">Target array</param>
+		/// <param name="bitposition">Current write position for target. Will start writing at this bitposition. Value gets incremented.</param>
+		/// <param name="bits">Number of bits to readout. Typically the current write position of the source buffer.</param>
+		public static void ReadOutSafe(this ulong[] source, int srcStartPos, byte[] target, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
 
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+			int readpos = srcStartPos;
+			int remaining = bits;
 
-		//	fixed (uint* _sPtr = source)
-		//	fixed (byte* _tPtr = target)
-		//	{
-		//		ulong* sPtr = (ulong*)_sPtr;
-		//		ulong* tPtr = (ulong*)_tPtr;
+			// TODO: Add len checks
 
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
+			while (remaining > 0)
+			{
+				int cnt = remaining > 64 ? 64 : remaining;
+				ulong val = source.Read(ref readpos, cnt);
+				target.Write(val, ref bitposition, cnt);
 
-		//			remaining -= cnt;
-		//		}
-		//	}
+				remaining -= cnt;
+			}
+			bitposition += bits;
+		}
 
-		//	targetPos += bits;
-		//}
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
+		/// <summary>
+		/// Read the contents of one array buffer to another. This safe version doesn't use Unsafe, and may be up to 3x slower than ReadArrayOutUnsafe().
+		/// </summary>
+		/// <param name="source">Source array to copy from.</param>
+		/// <param name="srcStartPos">Bit position in source to start reading frome.</param>
+		/// <param name="target">Target array</param>
+		/// <param name="bitposition">Current write position for target. Will start writing at this bitposition. Value gets incremented.</param>
+		/// <param name="bits">Number of bits to readout. Typically the current write position of the source buffer.</param>
+		public static void ReadOutSafe(this ulong[] source, int srcStartPos, ulong[] target, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
 
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
+			int readpos = srcStartPos;
+			int remaining = bits;
 
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+			// TODO: Add len checks
 
-		//	fixed (uint* _sPtr = source)
-		//	fixed (uint* _tPtr = target)
-		//	{
-		//		ulong* sPtr = (ulong*)_sPtr;
-		//		ulong* tPtr = (ulong*)_tPtr;
+			while (remaining > 0)
+			{
+				int cnt = remaining > 64 ? 64 : remaining;
+				ulong val = source.Read(ref readpos, cnt);
+				target.Write(val, ref bitposition, cnt);
 
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
+				remaining -= cnt;
+			}
+			bitposition += bits;
+		}
 
-		//			remaining -= cnt;
-		//		}
-		//	}
+		/// <summary>
+		/// Read the contents of one array buffer to another. This safe version doesn't use Unsafe, and may be up to 3x slower than ReadArrayOutUnsafe().
+		/// </summary>
+		/// <param name="source">Source array to copy from.</param>
+		/// <param name="srcStartPos">Bit position in source to start reading frome.</param>
+		/// <param name="target">Target array</param>
+		/// <param name="bitposition">Current write position for target. Will start writing at this bitposition. Value gets incremented.</param>
+		/// <param name="bits">Number of bits to readout. Typically the current write position of the source buffer.</param>
+		public static void ReadOutSafe(this byte[] source, int srcStartPos, ulong[] target, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
 
-		//	targetPos += bits;
-		//}
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this uint[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
+			int readpos = srcStartPos;
+			int remaining = bits;
 
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
+			// TODO: Add len checks
 
-		//	fixed (uint* _sPtr = source)
-		//	fixed (ulong* tPtr = target)
-		//	{
-		//		ulong* sPtr = (ulong*)_sPtr;
+			while (remaining > 0)
+			{
+				int cnt = remaining > 8 ? 8 : remaining;
+				ulong val = source.Read(ref readpos, cnt);
+				target.Write(val, ref bitposition, cnt);
 
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
+				remaining -= cnt;
+			}
+			bitposition += bits;
+		}
 
-		//			remaining -= cnt;
-		//		}
-		//	}
+		/// <summary>
+		/// Read the contents of one array buffer to another. This safe version doesn't use Unsafe, and may be up to 3x slower than ReadArrayOutUnsafe().
+		/// </summary>
+		/// <param name="source">Source array to copy from.</param>
+		/// <param name="srcStartPos">Bit position in source to start reading frome.</param>
+		/// <param name="target">Target array</param>
+		/// <param name="bitposition">Current write position for target. Will start writing at this bitposition. Value gets incremented.</param>
+		/// <param name="bits">Number of bits to readout. Typically the current write position of the source buffer.</param>
+		public static void ReadOutSafe(this byte[] source, int srcStartPos, byte[] target, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
 
-		//	targetPos += bits;
-		//}
+			int readpos = srcStartPos;
+			int remaining = bits;
 
-		//#endregion
+			// TODO: Add len checks
 
-		//#region ReadOut UInt8[] to Array
+			while (remaining > 0)
+			{
+				int cnt = remaining > 8 ? 8 : remaining;
+				ulong val = source.Read(ref readpos, cnt);
+				target.Write(val, ref bitposition, cnt);
 
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, ulong[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
+				remaining -= cnt;
+			}
+			bitposition += bits;
+		}
 
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
+		#endregion
 
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
-
-		//	fixed (byte* _sPtr = source)
-		//	fixed (ulong* tPtr = target)
-		//	{
-		//		ulong* sPtr = (ulong*)_sPtr;
-
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
-
-		//			remaining -= cnt;
-		//		}
-		//	}
-		//	targetPos += bits;
-		//}
-
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, uint[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
-
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
-
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
-
-		//	fixed (byte* _sPtr = source)
-		//	fixed (uint* _tPtr = target)
-		//	{
-		//		ulong* sPtr = (ulong*)_sPtr;
-		//		ulong* tPtr = (ulong*)_tPtr;
-
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
-
-		//			remaining -= cnt;
-		//		}
-		//	}
-		//	targetPos += bits;
-		//}
-		///// <summary>
-		///// Read the contents of one bitpacked array to another using Unsafe. This generally requires arrays to have a total byte count divisible by 8,
-		///// as they will be treated as ulong[] in unsafe.
-		///// </summary>
-		///// <param name="source"></param>
-		///// <param name="sourcePos">Bitpos of the source array to start read from.</param>
-		///// <param name="target"></param>
-		///// <param name="targetPos">The target bitposition (that will be incremented with this write).</param>
-		///// <param name="bits">Number of bits to copy. This should be the current bitpos of the source.</param>
-		//public unsafe static void ReadOutUnsafe(this byte[] source, int sourcePos, byte[] target, ref int targetPos, int bits)
-		//{
-		//	if (bits == 0)
-		//		return;
-
-		//	int readpos = sourcePos;
-		//	int remaining = bits;
-
-		//	System.Diagnostics.Debug.Assert((targetPos + bits) <= (target.Length << 3), bufferOverrunMsg);
-		//	System.Diagnostics.Debug.Assert((sourcePos + bits) <= (source.Length << 3), bufferOverrunMsg);
-
-		//	fixed (byte* _sPtr = source)
-		//	fixed (byte* _tPtr = target)
-		//	{
-		//		ulong* sPtr = (ulong*)_sPtr;
-		//		ulong* tPtr = (ulong*)_tPtr;
-
-		//		while (remaining > 0)
-		//		{
-		//			int cnt = remaining > 64 ? 64 : remaining;
-		//			ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-		//			WriteUnsafe(tPtr, val, ref targetPos, cnt);
-
-		//			remaining -= cnt;
-		//		}
-		//	}
-		//	targetPos += bits;
-		//}
-
-		//#endregion
+		#region Virtual Indexers
 
 		/// <summary>
 		/// Treats buffer as ulong[] and returns the index value of that virtual ulong[]
@@ -1079,6 +860,8 @@ namespace emotitron.Compression
 			ulong element = buffer[i];
 			return (byte)((element >> offset));
 		}
+
+		#endregion
 
 		#region Obsolete Writers
 
