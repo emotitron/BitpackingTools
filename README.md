@@ -10,7 +10,7 @@ The Array Serializer extension lets you bitpack directly to and from byte[], uin
 
 ### Basic Usage:
 ```cs
-  byte[] myBuffer = new byte[64];
+ byte[] myBuffer = new byte[64];
 
 int writepos = 0;
 myBuffer.WriteBool(true, ref writepos);
