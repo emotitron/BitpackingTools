@@ -295,53 +295,56 @@ namespace emotitron.Compression
 		#region Packed Signed
 
 		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// EXPERIMENTAL: Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
 		/// </summary>
-		public static void WritePackedBitsSigned(this ulong[] buffer, int value, ref int bitposition)
+		public static void WriteInt32PackedBits(this ulong[] buffer, int value, ref int bitposition)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.WritePackedBits(zigzag, ref bitposition, PackBitCount.UInt32);
 		}
 
-		public static int ReadPackedBitsSignedInt32(this ulong[] buffer, ref int bitposition)
+		public static int ReadInt32PackedBits(this ulong[] buffer, ref int bitposition)
 		{
 			uint value = (uint)buffer.ReadPackedBits(ref bitposition, PackBitCount.UInt32);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
 
-
-		public static void WritePackedBitsSigned(this uint[] buffer, int value, ref int bitposition)
+		/// <summary>
+		/// EXPERIMENTAL: Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static void WriteInt32PackedBits(this uint[] buffer, int value, ref int bitposition)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.WritePackedBits(zigzag, ref bitposition, PackBitCount.UInt32);
 		}
 
-		public static int ReadPackedBitsSignedInt32(this uint[] buffer, ref int bitposition)
+		public static int ReadInt32PackedBits(this uint[] buffer, ref int bitposition)
 		{
 			uint value = (uint)buffer.ReadPackedBits(ref bitposition, PackBitCount.UInt32);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
-
-		public static void WritePackedBitsSigned(this byte[] buffer, int value, ref int bitposition)
+		/// <summary>
+		/// EXPERIMENTAL: Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static void WriteInt32PackedBits(this byte[] buffer, int value, ref int bitposition)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			buffer.WritePackedBits(zigzag, ref bitposition, PackBitCount.UInt32);
 		}
 
-		public static int ReadPackedBitsSignedInt32(this byte[] buffer, ref int bitposition)
+		public static int ReadInt32PackedBits(this byte[] buffer, ref int bitposition)
 		{
 			uint value = (uint)buffer.ReadPackedBits(ref bitposition, PackBitCount.UInt32);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
-
-
-
-
+		
 		#endregion
-
 	}
 }
 
