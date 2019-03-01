@@ -25,6 +25,9 @@
 namespace emotitron.Compression
 {
 
+	public enum PackByteCount { UInt8 = 1, UInt16 = 1, UInt32 = 2, UInt64 = 3 }
+	public enum PackBitCount { UInt8 = 3, UInt16 = 4, UInt32 = 5, UInt64 = 6 }
+
 	/// <summary>
 	/// Experimental packers, that counts number of used bits for serialization. Effective for values that hover close to zero.
 	/// </summary>
@@ -103,7 +106,64 @@ namespace emotitron.Compression
 			return bitPatternToLog2[(ulong)(v * MULTIPLICATOR) >> 57];
 		}
 
+
+
 		#endregion
+
+		//public static int UsedByteCount(this ulong val)
+		//{
+		//	if ((val & 0xFF00000000000000) != 0)
+		//		return 8;
+		//	else if ((val & 0x00FF000000000000) != 0)
+		//		return 7;
+		//	else if ((val & 0x0000FF0000000000) != 0)
+		//		return 6;
+		//	else if ((val & 0x000000FF00000000) != 0)
+		//		return 5;
+		//	else if ((val & 0x00000000FF000000) != 0)
+		//		return 4;
+		//	else if ((val & 0x0000000000FF0000) != 0)
+		//		return 3;
+		//	else if ((val & 0x000000000000FF00) != 0)
+		//		return 2;
+		//	else 
+		//		return 1;
+		//}
+
+		public static int UsedByteCount(this ulong val)
+		{
+			if ((val & 0x000000FF00000000) != 0)
+			{
+				if ((val & 0x00FF000000000000) != 0)
+				{
+					if ((val & 0xFF00000000000000) != 0)
+						return 8;
+					return 7;
+				}
+				else
+				{
+					if ((val & 0x0000FF0000000000) != 0)
+						return 6;
+				}
+				return 5;
+			}
+			else
+			{
+				if ((val & 0x0000000000FF0000) != 0)
+				{
+					if ((val & 0x00000000FF000000) != 0)
+						return 4;
+					return 3;
+				}
+				else
+				{
+					if ((val & 0x000000000000FF00) != 0)
+						return 2;
+					else
+						return 1;
+				}
+			}
+		}
 	}
 }
 
