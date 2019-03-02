@@ -7,7 +7,7 @@ public class BenchmarkTests : MonoBehaviour
 {
 	public const int BYTE_CNT = 128;
 	public const int LOOP = 1000000;
-	public static byte[] buffer = new byte[BYTE_CNT * 8];
+	public static byte[] buffer = new byte[4800];
 	public static uint[] ibuffer = new uint[128];
 	public static ulong[] ubuffer = new ulong[128];
 	public static ulong[] ubuffer2 = new ulong[128];
@@ -22,132 +22,10 @@ public class BenchmarkTests : MonoBehaviour
 
 	private void Start()
 	{
-		TestAsArray();
+		TestWriterIntegrity();
 
 		ArrayCopy();
-	}
-
-
-	public unsafe static void TestAsArray()
-	{
-		int writep = 0;
-		int readp = 0;
-
-
-		ulong pbuffer = 0;
-		int posi = 0;
-
-		pbuffer = pbuffer.WritePackedBytes(666, ref posi, 25);
-		posi = 0;
-		ulong r5 = pbuffer.ReadPackedBytes(ref posi, 25);
-		Debug.Log("<b>PackByte </b>" + 666 + " " + r5);
-		Debug.Log("------");
-
-		posi = 0;
-		pbuffer = pbuffer.WriteSignedPackedBits(-129, ref posi, 32);
-		posi = 0;
-		int r7 = pbuffer.ReadSignedPackedBits(ref posi, 32);
-		Debug.Log("<b>Packed Signed </b>" + -129 + " " + r7);
-		Debug.Log("------");
-
-		for (int i = -70; i < 70; ++i)
-		{
-			
-			buffer.WriteSignedPackedBits(i, ref writep, 31);
-			int r2 = buffer.ReadSignedPackedBits(ref readp, 31);
-			Debug.Log(i + " " + r2);
-		}
-
-		//byte[] myBuffer = new byte[64];
-
-		//int writepos = 0;
-		//myBuffer.WriteBool(true, ref writepos);
-		//myBuffer.WriteSigned(-666, ref writepos, 10);
-		//myBuffer.Write(999, ref writepos, 10);
-
-		//int readpos = 0;
-		//bool restoredbool = myBuffer.ReadBool(ref readpos);
-		//int restoredval1 = myBuffer.ReadSigned(ref readpos, 10);
-		//uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
-
-		return;
-
-
-		const int size = 63;
-		ulong val1 = 1;
-		int val2 = -2;
-		ulong val3 = 3;
-		ulong val4 = 4;
-		ulong val5 = 5;
-		ulong val6 = 6;
-		ulong val7 = 7;
-		ulong val8 = 8;
-		ulong val9 = 9;
-
-		var watch2 = System.Diagnostics.Stopwatch.StartNew();
-		for (int loop = 0; loop < LOOP; ++loop)
-		{
-			int pos = 0;
-			buffer.Write(val1, ref pos, size);
-			buffer.Write((ulong)val2, ref pos, size);
-			buffer.Write(val3, ref pos, size);
-			buffer.Write(val4, ref pos, size);
-			buffer.Write(val5, ref pos, size);
-			buffer.Write(val6, ref pos, size);
-			buffer.Write(val7, ref pos, size);
-			buffer.Write(val8, ref pos, size);
-			buffer.Write(val9, ref pos, size);
-
-			pos = 0;
-			buffer.Read(ref pos, size);
-			buffer.Read(ref pos, size);
-			buffer.Read(ref pos, size);
-			buffer.Read(ref pos, size);
-			buffer.Read(ref pos, size);
-			buffer.Read(ref pos, size);
-			buffer.Read(ref pos, size);
-			buffer.Read(ref pos, size);
-			buffer.Read(ref pos, size);
-		}
-		watch2.Stop();
-		Debug.Log("Safe " + watch2.ElapsedMilliseconds);
-
-		var watch1 = System.Diagnostics.Stopwatch.StartNew();
-		fixed (byte* bPtr = buffer)
-		{
-			ulong* uPtr = (ulong*)bPtr;
-			for (int loop = 0; loop < LOOP; ++loop)
-			{
-				int pos = 0;
-				
-				val1.InjectUnsafe(uPtr, ref pos, size);
-				ArraySerializerUnsafe.WriteSigned(uPtr, val2, ref pos, size);
-				val3.InjectUnsafe(uPtr, ref pos, size);
-				val4.InjectUnsafe(uPtr, ref pos, size);
-				val5.InjectUnsafe(uPtr, ref pos, size);
-				val6.InjectUnsafe(uPtr, ref pos, size);
-				val7.InjectUnsafe(uPtr, ref pos, size);
-				val8.InjectUnsafe(uPtr, ref pos, size);
-				val9.InjectUnsafe(uPtr, ref pos, size);
-
-
-				pos = 0;
-				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializerUnsafe.ReadSigned(uPtr, ref pos, size);
-				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
-				ArraySerializerUnsafe.ReadUnsafe(uPtr, ref pos, size);
-			}
-		}
-		
-		watch1.Stop();
-		Debug.Log("UnSafe " + watch1.ElapsedMilliseconds);
-
-		return;
+		ArrayCopySafe();
 	}
 
 
@@ -190,6 +68,8 @@ public class BenchmarkTests : MonoBehaviour
 				Debug.Log("Error writing " + val2 + " to pos " + holdpos + " with size " + size);
 		}
 
+		Debug.Log("Integrity check complete.");
+
 	}
 
 	//static void ArrayCopySafe()
@@ -207,6 +87,30 @@ public class BenchmarkTests : MonoBehaviour
 	//	Debug.Log("Array Copy Safe: time=" + watch.ElapsedMilliseconds + " ms");
 	//}
 
+	static void TestLog2()
+	{
+		var watch = System.Diagnostics.Stopwatch.StartNew();
+
+		uint i = 0;
+		while (i <= uint.MaxValue)
+		{
+			i.UsedBitCount();
+			i.UsedBitCount();
+			i.UsedBitCount();
+			i.UsedBitCount();
+			i.UsedBitCount();
+
+			if ((uint.MaxValue - i) < 4000)
+				break;
+
+			i += 3000;
+		}
+
+		watch.Stop();
+
+		Debug.Log("Log2 nifty: time=" + watch.ElapsedMilliseconds + " ms");
+	}
+
 	static void ArrayCopy()
 	{
 		var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -220,6 +124,21 @@ public class BenchmarkTests : MonoBehaviour
 		watch.Stop();
 
 		Debug.Log("Array Copy Unsafe: time=" + watch.ElapsedMilliseconds + " ms");
+	}
+
+	static void ArrayCopySafe()
+	{
+		var watch = System.Diagnostics.Stopwatch.StartNew();
+
+		for (int loop = 0; loop < LOOP; ++loop)
+		{
+			int pos2 = 0;
+			ubuffer.ReadOutSafe(0, buffer, ref pos2, 120 * 8);
+		}
+
+		watch.Stop();
+
+		Debug.Log("Array Copy Safe: time=" + watch.ElapsedMilliseconds + " ms");
 	}
 
 	public static void ByteForByteWrite()

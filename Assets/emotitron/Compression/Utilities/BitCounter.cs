@@ -120,29 +120,11 @@ namespace emotitron.Compression
 			return bitPatternToLog2[(ulong)(v * MULTIPLICATOR) >> 57];
 		}
 
-		
+
 
 		#endregion
 
-		//public static int UsedByteCount(this ulong val)
-		//{
-		//	if ((val & 0xFF00000000000000) != 0)
-		//		return 8;
-		//	else if ((val & 0x00FF000000000000) != 0)
-		//		return 7;
-		//	else if ((val & 0x0000FF0000000000) != 0)
-		//		return 6;
-		//	else if ((val & 0x000000FF00000000) != 0)
-		//		return 5;
-		//	else if ((val & 0x00000000FF000000) != 0)
-		//		return 4;
-		//	else if ((val & 0x0000000000FF0000) != 0)
-		//		return 3;
-		//	else if ((val & 0x000000000000FF00) != 0)
-		//		return 2;
-		//	else 
-		//		return 1;
-		//}
+		#region Count Used Bytes Utils
 
 		public static int UsedByteCount(this ulong val)
 		{
@@ -215,45 +197,7 @@ namespace emotitron.Compression
 			else
 				return 1;
 		}
-
-		//public static int GetPackBitsSize(int bits)
-		//{
-
-		//	return UsedBitCount((ulong)bits);
-		//	////
-		//	//if (bits < 32)
-		//	//{
-		//	//	if (bits < 16)
-		//	//		return PackedBitsSize.UInt16;
-		//	//	else
-		//	//		return PackedBitsSize.UInt8;
-		//	//}
-		//	//else
-		//	//{
-		//	//	if (bits > 32)
-		//	//		return PackedBitsSize.UInt64;
-		//	//	else
-		//	//		return PackedBitsSize.UInt32;
-				
-		//	//}
-		//}
-		//public static PackedBytesSize GetPackBytesSize(int bits)
-		//{
-		//	if (bits > 16)
-		//	{
-		//		if (bits > 32)
-		//			return PackedBytesSize.UInt64;
-		//		else
-		//			return PackedBytesSize.UInt32;
-		//	}
-		//	else
-		//	{
-		//		if (bits > 8)
-		//			return PackedBytesSize.UInt16;
-		//		else
-		//			return PackedBytesSize.UInt8;
-		//	}
-		//}
+		#endregion
 	}
 }
 
