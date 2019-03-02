@@ -77,3 +77,43 @@ An alternative to Write() is Inject(), which has the value being written as the 
   999.InjectUnsigned(ref myBuffer, ref writepos, 10);
  ```
 
+## PackedBits and PackedBytes
+For fields that have large potential ranges, but have values that hover at or near zero there are PackedBits and PackedBytes serialization options.
+
+```cs
+int holdpos, writepos = 0, readpos = 0;
+
+buffer.WriteSignedPackedBits(0, ref writepos, 32);
+buffer.WriteSignedPackedBits(-100, ref writepos, 32);
+buffer.WriteSignedPackedBits(int.MinValue, ref writepos, 32);
+
+holdpos = readpos;
+int restored1 = buffer.ReadSignedPackedBits(ref readpos, 32);
+Debug.Log("ZERO = " + restored1 + " with " + (readpos - holdpos) + " written bits");
+
+holdpos = readpos;
+int restored2 = buffer.ReadSignedPackedBits(ref readpos, 32);
+Debug.Log("-100 = " + restored2 + " with " + (readpos - holdpos) + " written bits");
+
+holdpos = readpos;
+int restored3 = buffer.ReadSignedPackedBits(ref readpos, 32);
+Debug.Log("MIN = " + restored3 + " with " + (readpos - holdpos) + " written bits");
+```
+
+This returns the results of 
+```
+ZERO = 0 with 6 written bits
+-100 = -100 with 14 written bits
+MIN = -2147483648 with 38 written bits
+```
+For 32 bits of variable size, there is a 6 bit sizer added, making this less than ideal if the values will be large. However if the values often stay closer to zero, this can save quite a bit of space. Note that a value of zero only took 6 bits, and a value of -100 only took 14 bits.
+
+### PackedBits
+Values serialized using ``WritePackedBits()`` are checked for the position of the highest used signifigant bit. All zero bits on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info.
+
+### PackedBytes
+PackedBytes work in a similar way to PackedBits, except rather than counting bits, it counts used bytes. Values serialized using ``WritePackedBytes()`` are checked for the position of the highest used signifigant bit, and that is rounded up the the nearest byte. All empty bytes on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info.The resulting compression is similar in size to Varints. 
+
+
+### SignedPackedBits / SignedPackedBytes
+Signed types (int, short and sbyte) are automatically zigzagged to move the sign bit from the msb position to the lsb position, keeping the pattern of "closer to zero, the smaller the write" true for negative numbers.
