@@ -111,9 +111,22 @@ For 32 bits of variable size, there is a 6 bit sizer added, making this less tha
 ### PackedBits
 Values serialized using ``WritePackedBits()`` are checked for the position of the highest used signifigant bit. All zero bits on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info.
 
-### PackedBytes
-PackedBytes work in a similar way to PackedBits, except rather than counting bits, it counts used bytes. Values serialized using ``WritePackedBytes()`` are checked for the position of the highest used signifigant bit, and that is rounded up the the nearest byte. All empty bytes on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info.The resulting compression is similar in size to Varints. 
+| sizer | bits | break even  |
+|-------|------|-------------|
+| 4     | 8    | 15          |
+| 5     | 16   | 2047        |
+| 6     | 32   | 67108863    |
+| 7     | 64   | 1.44115E+17 |
 
+### PackedBytes
+PackedBytes work in a similar way to PackedBits, except rather than counting bits, it counts used bytes. Values serialized using ``WritePackedBytes()`` are checked for the position of the highest used signifigant bit, and that is rounded up the the nearest byte. All empty bytes on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info.The resulting compression is similar in size to Varints. The disadvantage of PackedBytes vs PackedBits is the rounding up to the nearest whole number of bytes, which may or may not be worth the reduced sizer size. It also has a lower threshold of where there is a savings.
+
+| sizer | bits | break even  |
+|-------|------|-------------|
+| 1     | 8    | 0           |
+| 2     | 16   | 255         |
+| 3     | 32   | 16777215    |
+| 4     | 64   | 7.20576E+16 |
 
 ### SignedPackedBits / SignedPackedBytes
 Signed types (int, short and sbyte) are automatically zigzagged to move the sign bit from the msb position to the lsb position, keeping the pattern of "closer to zero, the smaller the write" true for negative numbers.
