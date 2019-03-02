@@ -36,11 +36,11 @@ namespace emotitron.Compression
 		/// EXPERIMENTAL: Primary WritePacked Method
 		/// </summary>
 		/// <param name="countbits"></param>
-		public static void WritePackedBits(this byte[] buffer, ulong value, ref int bitposition, PackBitCount countbits)
+		public static void WritePackedBits(this byte[] buffer, ulong value, ref int bitposition, int bits)
 		{
 			int cnt = value.UsedBitCount();
-
-			buffer.Write((uint)(cnt - 1), ref bitposition, (int)countbits);
+			int countbits = bits.UsedBitCount();
+			buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
 			buffer.Write(value, ref bitposition, cnt);
 
 			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
@@ -49,11 +49,11 @@ namespace emotitron.Compression
 		/// EXPERIMENTAL: Primary WritePacked Method
 		/// </summary>
 		/// <param name="countbits"></param>
-		public static void WritePackedBits(this uint[] buffer, ulong value, ref int bitposition, PackBitCount countbits)
+		public static void WritePackedBits(this uint[] buffer, ulong value, ref int bitposition, int bits)
 		{
 			int cnt = value.UsedBitCount();
-
-			buffer.Write((uint)(cnt - 1), ref bitposition, (int)countbits);
+			int countbits = bits.UsedBitCount();
+			buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
 			buffer.Write(value, ref bitposition, cnt);
 
 			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
@@ -62,284 +62,114 @@ namespace emotitron.Compression
 		/// EXPERIMENTAL: Primary WritePacked Method
 		/// </summary>
 		/// <param name="countbits"></param>
-		public static void WritePackedBits(this ulong[] buffer, ulong value, ref int bitposition, PackBitCount countbits)
+		public static void WritePackedBits(this ulong[] buffer, ulong value, ref int bitposition, int bits)
 		{
 			int cnt = value.UsedBitCount();
-
-			buffer.Write((uint)(cnt - 1), ref bitposition, (int)countbits);
+			int countbits = bits.UsedBitCount();
+			buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
 			buffer.Write(value, ref bitposition, cnt);
 
 			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
 		}
-
-		#endregion
-
-		#region Secondary WritePacked
-
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this ulong[] buffer, ulong value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt64);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this ulong[] buffer, uint value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt32);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this ulong[] buffer, ushort value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt16);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this ulong[] buffer, byte value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt8);
-		}
-
-
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this uint[] buffer, ulong value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt64);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this uint[] buffer, uint value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt32);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this uint[] buffer, ushort value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt16);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this uint[] buffer, byte value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt8);
-		}
-
-
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this byte[] buffer, ulong value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt64);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this byte[] buffer, uint value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt32);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this byte[] buffer, ushort value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt16);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Write packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
-		/// </summary>
-		public static void WritePackedBits(this byte[] buffer, byte value, ref int bitposition)
-		{
-			WritePackedBits(buffer, value, ref bitposition, PackBitCount.UInt8);
-		}
-
 
 		#endregion
 
 		#region Primary Read Packed
 
-
 		/// <summary>
 		/// Primary Reader for PackedBits.
 		/// </summary>
-		public static ulong ReadPackedBits(this ulong[] buffer, ref int bitposition, PackBitCount packcount)
+		public static ulong ReadPackedBits(this ulong[] buffer, ref int bitposition, int bits)
 		{
-			int cnt = (int)buffer.Read(ref bitposition, (int)packcount) + 1;
+			int countbits = bits.UsedBitCount();
+			int cnt = (int)buffer.Read(ref bitposition, countbits);
 			return buffer.Read(ref bitposition, cnt);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBits.
 		/// </summary>
-		public static ulong ReadPackedBits(this uint[] buffer, ref int bitposition, PackBitCount packcount)
+		public static ulong ReadPackedBits(this uint[] buffer, ref int bitposition, int bits)
 		{
-			int cnt = (int)buffer.Read(ref bitposition, (int)packcount) + 1;
+			int countbits = bits.UsedBitCount();
+			int cnt = (int)buffer.Read(ref bitposition, countbits);
 			return buffer.Read(ref bitposition, cnt);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBits.
 		/// </summary>
-		public static ulong ReadPackedBits(this byte[] buffer, ref int bitposition, PackBitCount packcount)
+		public static ulong ReadPackedBits(this byte[] buffer, ref int bitposition, int bits)
 		{
-			int cnt = (int)buffer.Read(ref bitposition, (int)packcount) + 1;
+			int countbits = bits.UsedBitCount();
+			int cnt = (int)buffer.Read(ref bitposition, countbits);
 			return buffer.Read(ref bitposition, cnt);
-		}
-
-		#endregion
-
-		#region Secondary Read Packed
-
-		// ulong[]
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static ulong ReadPackedUInt64(this ulong[] buffer, ref int bitposition)
-		{
-			return ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt64);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static uint ReadPackedUInt32(this ulong[] buffer, ref int bitposition)
-		{
-			return (uint)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt32);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static ushort ReadPackedUInt16(this ulong[] buffer, ref int bitposition)
-		{
-			return (byte)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt16);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static byte ReadPackedUInt8(this ulong[] buffer, ref int bitposition)
-		{
-			return (byte)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt8);
-		}
-
-		// uint[]
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static ulong ReadPackedUInt64(this uint[] buffer, ref int bitposition)
-		{
-			return ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt64);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static uint ReadPackedUInt32(this uint[] buffer, ref int bitposition)
-		{
-			return (uint)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt32);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static ushort ReadPackedUInt16(this uint[] buffer, ref int bitposition)
-		{
-			return (ushort)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt16);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static byte ReadPackedUInt8(this uint[] buffer, ref int bitposition)
-		{
-			return (byte)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt8);
-		}
-
-		// byte[]
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static ulong ReadPackedUInt64(this byte[] buffer, ref int bitposition)
-		{
-			return (ulong)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt64);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static uint ReadPackedUInt32(this byte[] buffer, ref int bitposition)
-		{
-			return (uint)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt32);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static ushort ReadPackedUInt16(this byte[] buffer, ref int bitposition)
-		{
-			return (ushort)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt16);
-		}
-		/// <summary>
-		/// EXPERIMENTAL: Read packed value. Packed values work best for serializing fields that have a large possible range, but are mostly hover near or at zero in value.
-		/// </summary>
-		public static byte ReadPackedUInt8(this byte[] buffer, ref int bitposition)
-		{
-			return (byte)ReadPackedBits(buffer, ref bitposition, PackBitCount.UInt8);
 		}
 
 		#endregion
 
 		#region Packed Signed
 
+		// ulong[]
+
 		/// <summary>
-		/// EXPERIMENTAL: Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// EXPERIMENTAL: Primary Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
 		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
 		/// </summary>
-		public static void WriteInt32PackedBits(this ulong[] buffer, int value, ref int bitposition)
+		public static void WriteSignedPackedBits(this ulong[] buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			buffer.WritePackedBits(zigzag, ref bitposition, PackBitCount.UInt32);
+			buffer.WritePackedBits(zigzag, ref bitposition, bits);
 		}
-
-		public static int ReadInt32PackedBits(this ulong[] buffer, ref int bitposition)
+		/// <summary>
+		/// EXPERIMENTAL: Primary Read packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static int ReadSignedPackedBits(this ulong[] buffer, ref int bitposition, int bits)
 		{
-			uint value = (uint)buffer.ReadPackedBits(ref bitposition, PackBitCount.UInt32);
+			uint value = (uint)buffer.ReadPackedBits(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
 
+		//uint[]
+
 		/// <summary>
-		/// EXPERIMENTAL: Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// EXPERIMENTAL: Primary Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
 		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
 		/// </summary>
-		public static void WriteInt32PackedBits(this uint[] buffer, int value, ref int bitposition)
+		public static void WriteSignedPackedBits(this uint[] buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			buffer.WritePackedBits(zigzag, ref bitposition, PackBitCount.UInt32);
+			buffer.WritePackedBits(zigzag, ref bitposition, bits);
 		}
-
-		public static int ReadInt32PackedBits(this uint[] buffer, ref int bitposition)
+		/// <summary>
+		/// EXPERIMENTAL: Primary Read packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static int ReadSignedPackedBits(this uint[] buffer, ref int bitposition, int bits)
 		{
-			uint value = (uint)buffer.ReadPackedBits(ref bitposition, PackBitCount.UInt32);
+			uint value = (uint)buffer.ReadPackedBits(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
+
+		// byte[]
+
 		/// <summary>
-		/// EXPERIMENTAL: Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// EXPERIMENTAL: Primary Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
 		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
 		/// </summary>
-		public static void WriteInt32PackedBits(this byte[] buffer, int value, ref int bitposition)
+		public static void WriteSignedPackedBits(this byte[] buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			buffer.WritePackedBits(zigzag, ref bitposition, PackBitCount.UInt32);
+			buffer.WritePackedBits(zigzag, ref bitposition, bits);
 		}
-
-		public static int ReadInt32PackedBits(this byte[] buffer, ref int bitposition)
+		/// <summary>
+		/// EXPERIMENTAL: Primary Read packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static int ReadSignedPackedBits(this byte[] buffer, ref int bitposition, int bits)
 		{
-			uint value = (uint)buffer.ReadPackedBits(ref bitposition, PackBitCount.UInt32);
+			uint value = (uint)buffer.ReadPackedBits(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}

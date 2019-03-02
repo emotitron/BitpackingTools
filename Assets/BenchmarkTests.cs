@@ -11,23 +11,66 @@ public class BenchmarkTests : MonoBehaviour
 	public static uint[] ibuffer = new uint[128];
 	public static ulong[] ubuffer = new ulong[128];
 	public static ulong[] ubuffer2 = new ulong[128];
-	
+
+	//[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+	//static void Test()
+	//{
+	//	TestAsArray();
+
+	//	ArrayCopy();
+	//}
+
+	private void Start()
+	{
+		TestAsArray();
+
+		ArrayCopy();
+	}
+
+
 	public unsafe static void TestAsArray()
 	{
-
-byte[] myBuffer = new byte[64];
-
-int writepos = 0;
-myBuffer.WriteBool(true, ref writepos);
-myBuffer.WriteSigned(-666, ref writepos, 10);
-myBuffer.Write(999, ref writepos, 10);
-
-int readpos = 0;
-bool restoredbool = myBuffer.ReadBool(ref readpos);
-int restoredval1 = myBuffer.ReadSigned(ref readpos, 10);
-uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
+		int writep = 0;
+		int readp = 0;
 
 
+		ulong pbuffer = 0;
+		int posi = 0;
+
+		pbuffer = pbuffer.WritePackedBytes(666, ref posi, 25);
+		posi = 0;
+		ulong r5 = pbuffer.ReadPackedBytes(ref posi, 25);
+		Debug.Log("<b>PackByte </b>" + 666 + " " + r5);
+		Debug.Log("------");
+
+		posi = 0;
+		pbuffer = pbuffer.WriteSignedPackedBits(-129, ref posi, 32);
+		posi = 0;
+		int r7 = pbuffer.ReadSignedPackedBits(ref posi, 32);
+		Debug.Log("<b>Packed Signed </b>" + -129 + " " + r7);
+		Debug.Log("------");
+
+		for (int i = -70; i < 70; ++i)
+		{
+			
+			buffer.WriteSignedPackedBits(i, ref writep, 31);
+			int r2 = buffer.ReadSignedPackedBits(ref readp, 31);
+			Debug.Log(i + " " + r2);
+		}
+
+		//byte[] myBuffer = new byte[64];
+
+		//int writepos = 0;
+		//myBuffer.WriteBool(true, ref writepos);
+		//myBuffer.WriteSigned(-666, ref writepos, 10);
+		//myBuffer.Write(999, ref writepos, 10);
+
+		//int readpos = 0;
+		//bool restoredbool = myBuffer.ReadBool(ref readpos);
+		//int restoredval1 = myBuffer.ReadSigned(ref readpos, 10);
+		//uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
+
+		return;
 
 
 		const int size = 63;
@@ -107,14 +150,6 @@ uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
 		return;
 	}
 
-	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-	static void Test()
-	{
-		TestAsArray();
-
-		ArrayCopy();
-		//ArrayCopySafe();
-	}
 
 	public static void TestWriterIntegrity()
 	{
@@ -291,15 +326,15 @@ uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
 
 	static float interval = 0;
 
-	void Update()
-	{
-		interval += Time.deltaTime;
-		if (interval > 3)
-		{
-			Test();
-			interval = 0;
-		}
-	}
+	//void Update()
+	//{
+	//	interval += Time.deltaTime;
+	//	if (interval > 3)
+	//	{
+	//		Test();
+	//		interval = 0;
+	//	}
+	//}
 }
 
 /// <summary>
