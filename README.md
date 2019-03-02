@@ -6,7 +6,7 @@ To make these extensions accessible add:
 
 ## ArraySerializeExt class
 
-The Array Serializer extension lets you bitpack directly to and from byte[], uint[] and ulong[] buffers. Because there is no wrapper class such as Bitstream, you need to maintain read/write pointers. The methods automatically increment this pointers for you however.
+The Array Serializer extension lets you bitpack directly to and from byte[], uint[] and ulong[] buffers. Because there is no wrapper class such as Bitstream, you need to maintain read/write pointers. The methods automatically increment the passer bitposition pointers for you.
 
 ### Basic Usage:
 ```cs
