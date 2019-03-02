@@ -40,13 +40,13 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = value.UsedByteCount();
+			int valuebytes = value.UsedByteCount();
 
-			buffer = buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
-			buffer = buffer.Write(value, ref bitposition, valuebits << 3);
+			buffer = buffer.Write((uint)(valuebytes), ref bitposition, (int)sizebits);
+			buffer = buffer.Write(value, ref bitposition, valuebytes << 3);
 
-			UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes + 
-				" = [" + (int)sizebits  + " : " + (valuebits << 3) + "]  total bits: " + ((int)sizebits + (valuebits << 3)));
+			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes + 
+			//	" = [" + (int)sizebits  + " : " + (valuebytes << 3) + "]  total bits: " + ((int)sizebits + (valuebytes << 3)));
 
 			return buffer;
 		}
@@ -57,13 +57,13 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = value.UsedByteCount();
+			int valuebytes = value.UsedByteCount();
 
-			buffer = buffer.Write((uint)(valuebits), ref bitposition, sizebits);
-			buffer = buffer.Write(value, ref bitposition, valuebits << 3);
+			buffer = buffer.Write((uint)(valuebytes), ref bitposition, sizebits);
+			buffer = buffer.Write(value, ref bitposition, valuebytes << 3);
 
-			UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes + 
-				" = [" + (int)sizebits + " : " + (valuebits << 3) + "]  total bits: " + ((int)sizebits + (valuebits << 3)));
+			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes + 
+			//	" = [" + (int)sizebits + " : " + (valuebytes << 3) + "]  total bits: " + ((int)sizebits + (valuebytes << 3)));
 
 			return buffer;
 		}
@@ -75,13 +75,13 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = value.UsedByteCount();
+			int valuebytes = value.UsedByteCount();
 
-			buffer = buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
-			buffer = buffer.Write(value, ref bitposition, valuebits << 3);
+			buffer = buffer.Write((uint)(valuebytes), ref bitposition, (int)sizebits);
+			buffer = buffer.Write(value, ref bitposition, valuebytes << 3);
 
-			UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
-				" = [" + (int)sizebits + " : " + (valuebits << 3) + "]  total bits: " + ((int)sizebits + (valuebits << 3)));
+			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
+			//	" = [" + (int)sizebits + " : " + (valuebytes << 3) + "]  total bits: " + ((int)sizebits + (valuebytes << 3)));
 		}
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write Method.
@@ -90,13 +90,13 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = value.UsedByteCount();
+			int valuebytes = value.UsedByteCount();
 
-			buffer = buffer.Write((uint)(valuebits), ref bitposition, sizebits);
-			buffer = buffer.Write(value, ref bitposition, valuebits << 3);
+			buffer = buffer.Write((uint)(valuebytes), ref bitposition, sizebits);
+			buffer = buffer.Write(value, ref bitposition, valuebytes << 3);
 
-			UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
-				" = [" + (int)sizebits + " : " + (valuebits << 3) + "]  total bits: " + ((int)sizebits + (valuebits << 3)));
+			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
+			//	" = [" + (int)sizebits + " : " + (valuebytes << 3) + "]  total bits: " + ((int)sizebits + (valuebytes << 3)));
 		}
 
 		#endregion
@@ -110,8 +110,8 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = (int)buffer.Read(ref bitposition, sizebits) << 3;
-			return buffer.Read(ref bitposition, valuebits);
+			int valuebytes = (int)buffer.Read(ref bitposition, sizebits);
+			return buffer.Read(ref bitposition, valuebytes << 3);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBytes.
@@ -120,15 +120,13 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = (int)buffer.Read(ref bitposition, sizebits) << 3;
-			return buffer.Read(ref bitposition, valuebits);
+			int valuebytes = (int)buffer.Read(ref bitposition, sizebits);
+			return buffer.Read(ref bitposition, valuebytes << 3);
 		}
 
 		#endregion
 
 		#region Packed Signed
-
-		// ulong buffer - int write
 
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write signed value as PackedByte. 
@@ -136,7 +134,6 @@ namespace emotitron.Compression
 		public static ulong WriteSignedPackedBytes(this ulong buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			UnityEngine.Debug.Log("WriteSigned zigzag " + zigzag + "  value " + value);
 			return buffer.WritePackedBytes(zigzag, ref bitposition, bits);
 		}
 		/// <summary>

@@ -120,8 +120,6 @@ namespace emotitron.Compression
 			return bitPatternToLog2[(ulong)(v * MULTIPLICATOR) >> 57];
 		}
 
-
-
 		#endregion
 
 		#region Count Used Bytes Utils

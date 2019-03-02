@@ -29,7 +29,23 @@ namespace emotitron.Compression
 	/// </summary>
 	public static class ArrayPackBytesExt
 	{
-		#region Primary Write / Inject Packed
+		#region Primary Write Packed
+
+		/// <summary>
+		/// EXPERIMENTAL: Primary UNSAFE Write Method.
+		/// </summary>
+		public unsafe static void WritePackedBytes(ulong* uPtr, ulong value, ref int bitposition, int bits)
+		{
+			int bytes = (bits + 7) >> 3;
+			int sizebits = bytes.UsedBitCount();
+			int valuebytes = value.UsedByteCount();
+
+			ArraySerializerUnsafe.WriteUnsafe(uPtr, (uint)(valuebytes), ref bitposition, (int)sizebits);
+			ArraySerializerUnsafe.WriteUnsafe(uPtr, value, ref bitposition, valuebytes << 3);
+
+			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
+			//	" = [" + (int)sizebits + " : " + (valuebytes << 3) + "]  total bits: " + ((int)sizebits + (valuebytes << 3)));
+		}
 
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write Method.
@@ -38,13 +54,13 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = value.UsedByteCount();
+			int valuebytes = value.UsedByteCount();
 
-			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
-			buffer.Write(value, ref bitposition, valuebits << 3);
+			buffer.Write((uint)(valuebytes), ref bitposition, (int)sizebits);
+			buffer.Write(value, ref bitposition, valuebytes << 3);
 
-			UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
-				" = [" + (int)sizebits + " : " + (valuebits << 3) + "]  total bits: " + ((int)sizebits + (valuebits << 3)));
+			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
+			//	" = [" + (int)sizebits + " : " + (valuebytes << 3) + "]  total bits: " + ((int)sizebits + (valuebytes << 3)));
 		}
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write Method.
@@ -53,10 +69,10 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = value.UsedByteCount();
+			int valuebytes = value.UsedByteCount();
 
-			buffer.Write((uint)(valuebits), ref bitposition, sizebits);
-			buffer.Write(value, ref bitposition, valuebits << 3);
+			buffer.Write((uint)(valuebytes), ref bitposition, sizebits);
+			buffer.Write(value, ref bitposition, valuebytes << 3);
 
 			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
 			//	" = [" + (int)sizebits + " : " + (valuebits << 3) + "]  total bits: " + ((int)sizebits + (valuebits << 3)));
@@ -68,19 +84,29 @@ namespace emotitron.Compression
 		{
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = value.UsedByteCount();
+			int valuebytes = value.UsedByteCount();
 
-			buffer.Write((uint)(valuebits), ref bitposition, sizebits);
-			buffer.Write(value, ref bitposition, valuebits << 3);
+			buffer.Write((uint)(valuebytes), ref bitposition, sizebits);
+			buffer.Write(value, ref bitposition, valuebytes << 3);
 
 			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
 			//	" = [" + (int)sizebits + " : " + (valuebits << 3) + "]  total bits: " + ((int)sizebits + (valuebits << 3)));
 		}
-		
+
 		#endregion
 
 		#region Primary Read Packed
 
+		/// <summary>
+		/// Primary UNSAFE Reader for PackedBytes.
+		/// </summary>
+		public unsafe static uint ReadPackedBytes(ulong* uPtr, ref int bitposition, int bits)
+		{
+			int bytes = (bits + 7) >> 3;
+			int sizebits = bytes.UsedBitCount();
+			int valuebits = (int)ArraySerializerUnsafe.ReadUnsafe(uPtr, ref bitposition, sizebits) << 3;
+			return (uint)ArraySerializerUnsafe.ReadUnsafe(uPtr, ref bitposition, valuebits);
+		}
 		/// <summary>
 		/// Primary Reader for PackedBytes.
 		/// </summary>
@@ -116,6 +142,28 @@ namespace emotitron.Compression
 
 		#region Packed Signed
 
+		// Unsafe
+
+		/// <summary>
+		/// EXPERIMENTAL: Primary UNSAFE Write signed value as PackedByte. 
+		/// </summary>
+		public unsafe static void WriteSignedPackedBytes(ulong* uPtr, int value, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			WritePackedBytes(uPtr, zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// EXPERIMENTAL: Primary UNSAFE Read signed value from PackedByte. 
+		/// </summary>
+		public unsafe static int ReadSignedPackedBytes(ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint value = (uint)ReadPackedBytes(uPtr, ref bitposition, bits);
+			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+			return zagzig;
+		}
+
+		// ulong[]
+
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write signed value as PackedByte. 
 		/// </summary>
@@ -134,6 +182,8 @@ namespace emotitron.Compression
 			return zagzig;
 		}
 
+		// uint[]
+
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write signed value as PackedByte. 
 		/// </summary>
@@ -151,6 +201,8 @@ namespace emotitron.Compression
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
+
+		// byte[]
 
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write signed value as PackedByte. 

@@ -29,47 +29,61 @@ namespace emotitron.Compression
 	/// </summary>
 	public static class ArrayPackBitsExt
 	{
-
 		#region Primary Write Packed
 
 		/// <summary>
-		/// EXPERIMENTAL: Primary WritePacked Method
+		/// EXPERIMENTAL: Primary UNSAFE WritePacked Method.
 		/// </summary>
 		/// <param name="countbits"></param>
-		public static void WritePackedBits(this byte[] buffer, ulong value, ref int bitposition, int bits)
+		public unsafe static void WritePackedBitsUnsafe(ulong* uPtr, ulong value, ref int bitposition, int bits)
 		{
-			int cnt = value.UsedBitCount();
-			int countbits = bits.UsedBitCount();
-			buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
-			buffer.Write(value, ref bitposition, cnt);
+			int valuebits = value.UsedBitCount();
+			int sizebits = bits.UsedBitCount();
+			ArraySerializerUnsafe.WriteUnsafe(uPtr, (uint)(valuebits), ref bitposition, (int)sizebits);
+			ArraySerializerUnsafe.WriteUnsafe(uPtr, value, ref bitposition, valuebits);
 
-			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
+			//UnityEngine.Debug.Log(value + " = ones : " + valuebits + " / " + (int)sizebits + "  total bits: " + ((int)sizebits + valuebits));
 		}
-		/// <summary>
-		/// EXPERIMENTAL: Primary WritePacked Method
-		/// </summary>
-		/// <param name="countbits"></param>
-		public static void WritePackedBits(this uint[] buffer, ulong value, ref int bitposition, int bits)
-		{
-			int cnt = value.UsedBitCount();
-			int countbits = bits.UsedBitCount();
-			buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
-			buffer.Write(value, ref bitposition, cnt);
 
-			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
-		}
 		/// <summary>
 		/// EXPERIMENTAL: Primary WritePacked Method
 		/// </summary>
 		/// <param name="countbits"></param>
 		public static void WritePackedBits(this ulong[] buffer, ulong value, ref int bitposition, int bits)
 		{
-			int cnt = value.UsedBitCount();
-			int countbits = bits.UsedBitCount();
-			buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
-			buffer.Write(value, ref bitposition, cnt);
+			int valuebits = value.UsedBitCount();
+			int sizebits = bits.UsedBitCount();
+			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
+			buffer.Write(value, ref bitposition, valuebits);
 
-			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
+			//UnityEngine.Debug.Log(value + " = ones : " + valuebits + " / " + (int)sizebits + "  total bits: " + ((int)sizebits + valuebits));
+		}
+		
+		/// <summary>
+		/// EXPERIMENTAL: Primary WritePacked Method
+		/// </summary>
+		/// <param name="countbits"></param>
+		public static void WritePackedBits(this uint[] buffer, ulong value, ref int bitposition, int bits)
+		{
+			int valuebits = value.UsedBitCount();
+			int sizebits = bits.UsedBitCount();
+			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
+			buffer.Write(value, ref bitposition, valuebits);
+
+			//UnityEngine.Debug.Log(value + " = ones : " + valuebits + " / " + (int)sizebits + "  total bits: " + ((int)sizebits + valuebits));
+		}
+		/// <summary>
+		/// EXPERIMENTAL: Primary WritePacked Method
+		/// </summary>
+		/// <param name="countbits"></param>
+		public static void WritePackedBits(this byte[] buffer, ulong value, ref int bitposition, int bits)
+		{
+			int valuebits = value.UsedBitCount();
+			int sizebits = bits.UsedBitCount();
+			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
+			buffer.Write(value, ref bitposition, valuebits);
+
+			//UnityEngine.Debug.Log(value + " = ones : " + valuebits + " / " + (int)sizebits + "  total bits: " + ((int)sizebits + valuebits));
 		}
 
 		#endregion
@@ -77,37 +91,69 @@ namespace emotitron.Compression
 		#region Primary Read Packed
 
 		/// <summary>
+		/// Primary UNSAFE Reader for PackedBits.
+		/// </summary>
+		public unsafe static ulong ReadPackedBits(ulong* uPtr, ref int bitposition, int bits)
+		{
+			int sizebits = bits.UsedBitCount();
+			int valuebits = (int)ArraySerializerUnsafe.ReadUnsafe(uPtr, ref bitposition, sizebits);
+			return ArraySerializerUnsafe.ReadUnsafe(uPtr, ref bitposition, valuebits);
+		}
+
+		/// <summary>
 		/// Primary Reader for PackedBits.
 		/// </summary>
 		public static ulong ReadPackedBits(this ulong[] buffer, ref int bitposition, int bits)
 		{
-			int countbits = bits.UsedBitCount();
-			int cnt = (int)buffer.Read(ref bitposition, countbits);
-			return buffer.Read(ref bitposition, cnt);
+			int sizebits = bits.UsedBitCount();
+			int valuebits = (int)buffer.Read(ref bitposition, sizebits);
+			return buffer.Read(ref bitposition, valuebits);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBits.
 		/// </summary>
 		public static ulong ReadPackedBits(this uint[] buffer, ref int bitposition, int bits)
 		{
-			int countbits = bits.UsedBitCount();
-			int cnt = (int)buffer.Read(ref bitposition, countbits);
-			return buffer.Read(ref bitposition, cnt);
+			int sizebits = bits.UsedBitCount();
+			int valuebits = (int)buffer.Read(ref bitposition, sizebits);
+			return buffer.Read(ref bitposition, valuebits);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBits.
 		/// </summary>
 		public static ulong ReadPackedBits(this byte[] buffer, ref int bitposition, int bits)
 		{
-			int countbits = bits.UsedBitCount();
-			int cnt = (int)buffer.Read(ref bitposition, countbits);
-			return buffer.Read(ref bitposition, cnt);
+			int sizebits = bits.UsedBitCount();
+			int valuebits = (int)buffer.Read(ref bitposition, sizebits);
+			return buffer.Read(ref bitposition, valuebits);
 		}
 
 		#endregion
 
 		#region Packed Signed
 
+		// Unsafe
+
+		/// <summary>
+		/// EXPERIMENTAL: Primary UNSAFE Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public unsafe static void WriteSignedPackedBits(ulong* uPtr, int value, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			WritePackedBitsUnsafe(uPtr, zigzag, ref bitposition, bits);
+		}
+
+		/// <summary>
+		/// EXPERIMENTAL: Primary UNSAFE Read packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public unsafe static int ReadSignedPackedBits(ulong* buffer, ref int bitposition, int bits)
+		{
+			uint value = (uint)ReadPackedBits(buffer, ref bitposition, bits);
+			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+			return zagzig;
+		}
 		// ulong[]
 
 		/// <summary>
@@ -173,8 +219,9 @@ namespace emotitron.Compression
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
-		
+
 		#endregion
+
 	}
 }
 

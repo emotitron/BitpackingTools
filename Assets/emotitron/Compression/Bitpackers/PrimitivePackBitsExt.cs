@@ -42,7 +42,7 @@ namespace emotitron.Compression
 			buffer = buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
 			buffer = buffer.Write(value, ref bitposition, cnt);
 
-			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
+			//UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
 			return buffer;
 		}
 		/// <summary>
@@ -56,7 +56,7 @@ namespace emotitron.Compression
 			buffer = buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
 			buffer = buffer.Write(value, ref bitposition, cnt);
 
-			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
+			//UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
 			return buffer;
 		}
 		/// <summary>
@@ -70,7 +70,7 @@ namespace emotitron.Compression
 			buffer = buffer.Write((uint)(cnt), ref bitposition, (int)countbits);
 			buffer = buffer.Write(value, ref bitposition, cnt);
 
-			UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
+			//UnityEngine.Debug.Log(value + " = ones : " + cnt + " / " + (int)countbits + "  total bits: " + ((int)countbits + cnt));
 			return buffer;
 		}
 
