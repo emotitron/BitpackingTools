@@ -210,7 +210,6 @@ namespace emotitron.Compression
 		public static void WriteSignedPackedBytes(this byte[] buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			UnityEngine.Debug.Log("zigzag = " + zigzag);
 			buffer.WritePackedBytes(zigzag, ref bitposition, bits);
 		}
 		/// <summary>

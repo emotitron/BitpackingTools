@@ -68,6 +68,7 @@ public class BenchmarkTests : MonoBehaviour
 				Debug.Log("Error writing " + val2 + " to pos " + holdpos + " with size " + size);
 		}
 
+
 		Debug.Log("Integrity check complete.");
 
 	}
