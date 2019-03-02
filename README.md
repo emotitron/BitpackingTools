@@ -119,7 +119,7 @@ Values serialized using ``WritePackedBits()`` are checked for the position of th
 | 7     | 64   | 1.44115E+17 |
 
 ### PackedBytes
-PackedBytes work in a similar way to PackedBits, except rather than counting bits, it counts used bytes. Values serialized using ``WritePackedBytes()`` are checked for the position of the highest used signifigant bit, and that is rounded up the the nearest byte. All empty bytes on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info.The resulting compression is similar in size to Varints. The disadvantage of PackedBytes vs PackedBits is the rounding up to the nearest whole number of bytes, which may or may not be worth the reduced sizer size. It also has a lower threshold of where there is a savings.
+PackedBytes work in a similar way to PackedBits, except rather than counting bits, it counts used bytes. Values serialized using ``WritePackedBytes()`` are checked for the position of the highest used signifigant bit, and that is rounded up the the nearest byte. All empty bytes on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info. The resulting compression is similar in size to Varints. The disadvantage of PackedBytes vs PackedBits is the rounding up to the nearest whole number of bytes, which may or may not be worth the reduced sizer size. It also has a lower threshold of where there is a savings.
 
 | sizer | bits | break even  |
 |-------|------|-------------|
