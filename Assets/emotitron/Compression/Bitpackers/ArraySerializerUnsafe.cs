@@ -37,6 +37,11 @@ namespace emotitron.Compression
 
 		#region Read/Write Signed Value
 
+		public unsafe static void AppendSigned(ulong* buffer, int value, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			AppendUnsafe(buffer, zigzag, ref bitposition, bits);
+		}
 		public unsafe static void WriteSigned(ulong* buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
@@ -56,6 +61,37 @@ namespace emotitron.Compression
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Primary Append writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
+		/// Append does not preserve existing buffer data past the write point in exchange for a faster write.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		/// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
+		/// <param name="value"></param>
+		/// <param name="bitposition"></param>
+		/// <param name="bits"></param>
+		public unsafe static void AppendUnsafe(ulong* uPtr, ulong value, ref int bitposition, int bits)
+		{
+			const int MAXBITS = 64;
+			const int MODULUS = MAXBITS - 1;
+			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int index = bitposition >> 6;
+			int endpos = bitposition + bits;
+			int endindex = ((endpos - 1) >> 6);
+
+			// Offset both the mask and the compressed value using the remainder as the offset
+			ulong offsetmask = ((1UL << offset) - 1);
+
+			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 5), bufferOverrunMsg);
+
+			ulong comp = uPtr[index] & offsetmask;
+			ulong result = comp | (value << offset);
+			uPtr[index] = (uint)result;
+			uPtr[index + 1] = (uint)(result >> MAXBITS);
+
+			bitposition += bits;
+		}
 
 		/// <summary>
 		/// Primary Unsafe writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
@@ -101,10 +137,7 @@ namespace emotitron.Compression
 				index++;
 			}
 
-			if (endpos > bitposition)
-				bitposition = endpos;
-
-			return;
+			bitposition = endpos;
 		}
 
 		/// <summary>
