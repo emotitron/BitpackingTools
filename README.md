@@ -14,7 +14,7 @@ buffer.Write(value, ref int bitposition, int bits)
 Writes the least significant ``bits`` of the ``value`` into the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``.
 
 ### Read
-```
+```cs
 buffer.Read(ref int bitposition, int bits)
 ```
 Returns x ``bits`` from read from the ``buffer``starting at ``bitposition``. The ``bitposition`` is incremented by ``bits``.
