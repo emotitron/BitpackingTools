@@ -1,5 +1,51 @@
 # BitpackingTools
-Bitpacking/serialization libraries used interally for Unity Store <a href="https://assetstore.unity.com/packages/tools/network/network-sync-transform-nst-98453">NetworkSyncTransform</a> and <a href="https://assetstore.unity.com/packages/tools/network/transform-crusher-free-version-117313">TransformCrusher</a> Assets 
+Bitpacking/serialization libraries used interally for Unity Store <a href="https://assetstore.unity.com/packages/tools/network/network-sync-transform-nst-98453">NetworkSyncTransform</a> and <a href="https://assetstore.unity.com/packages/tools/network/transform-crusher-free-version-117313">TransformCrusher</a> Assets.
+
+## Primary Methods:
+### Write
+```cs
+buffer.Write(value, ref int bitposition, int bits)
+```
+Writes the least signifigant ``bits`` of the ``value`` into the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``.
+
+### Read
+```
+buffer.Read(ref int bitposition, int bits)
+```
+Returns x ``bits`` from read from the ``buffer``starting at ``bitposition``. The ``bitposition`` is incremented by ``bits``.
+
+## Alternative Methods
+### Inject
+```cs
+value.Inject(buffer, ref int bitposition, int bits)
+```
+Same as _Write()_, but with a different order of arguments.
+Writes the least signifigant ``bits`` of the ``value`` into the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the write is preserved, allowing for non-linear injection of values.
+
+### Append
+```cs
+buffer.Append(value, ref int bitposition, int bits)
+```
+Similar to Write, this method Appends the least signifigant ``bits`` of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. However, xxisting data past the bitposition is not preserved to increase the write speed. Use only for sequential writes, and use Write() and Inject() for non-linear insertions.
+
+### Add
+```cs
+value.Add(buffer, ref int bitposition, int bits)
+```
+Same as _Append()_, but with a different order of arguments.
+Appends the least signifigant ''bits'' of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the bitposition is not preserved, so this is only mean for faster sequential writes.
+
+### Peek
+```
+buffer.Peek(int bitposition, int bits)
+```
+Returns x ``bits`` from read from the ``buffer``starting at ``bitposition``. The ``bitposition`` is not incremented.
+
+### Poke
+```value.Poke(buffer, int bitposition, int bits)```
+Injects x `least signifigant `bits`` of the ``value`` into the ``buffer`` at the ``bitposition``. The ``bitposition`` is not incremented.
+
+
 
 To make these extensions accessible add:
 ```using emotitron.Compression;```
