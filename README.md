@@ -41,14 +41,16 @@ Same as _Append()_, but with a different order of arguments.
 Appends the least significant ''bits'' of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the bitposition is not preserved, so this is only mean for faster sequential writes.
 
 ### Peek
-```
+```cs
 buffer.Peek(int bitposition, int bits)
 ```
 Returns x ``bits`` from read from the ``buffer``starting at ``bitposition``. The ``bitposition`` is not incremented.
 
 ### Poke
-```value.Poke(buffer, int bitposition, int bits)```
-Injects x `least signifigant `bits`` of the ``value`` into the ``buffer`` at the ``bitposition``. The ``bitposition`` is not incremented.
+```cs
+value.Poke(buffer, int bitposition, int bits)
+```
+Injects x least signifigant ``bits`` of the ``value`` into the ``buffer`` at the ``bitposition``. The ``bitposition`` is not incremented.
 
 
 
