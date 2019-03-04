@@ -46,8 +46,8 @@ namespace emotitron.Compression
 
 			int valuebits = value.UsedBitCount();
 			int sizebits = bits.UsedBitCount();
-			ArraySerializerUnsafe.Write(uPtr, (uint)(valuebits), ref bitposition, sizebits);
-			ArraySerializerUnsafe.Write(uPtr, value, ref bitposition, valuebits);
+			ArraySerializeUnsafe.Write(uPtr, (uint)(valuebits), ref bitposition, sizebits);
+			ArraySerializeUnsafe.Write(uPtr, value, ref bitposition, valuebits);
 
 			//UnityEngine.Debug.Log("Write Unsafe PBits " + value + " = " + sizebits + " : " + valuebits);
 		}
@@ -112,9 +112,9 @@ namespace emotitron.Compression
 				return 0;
 
 			int sizebits = bits.UsedBitCount();
-			int valuebits = (int)ArraySerializerUnsafe.Read(uPtr, ref bitposition, sizebits);
+			int valuebits = (int)ArraySerializeUnsafe.Read(uPtr, ref bitposition, sizebits);
 			//UnityEngine.Debug.Log("Read Packedunsafe sizer/value : " + sizebits + " : " + valuebits);
-			return ArraySerializerUnsafe.Read(uPtr, ref bitposition, valuebits);
+			return ArraySerializeUnsafe.Read(uPtr, ref bitposition, valuebits);
 		}
 
 		/// <summary>

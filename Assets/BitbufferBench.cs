@@ -53,12 +53,12 @@ public class BitbufferBench : MonoBehaviour {
 		fixed (ulong* bPtr = ubuffer)
 		{
 			ulong* uPtr = (ulong*)bPtr;
-			ArraySerializerUnsafe.Write(uPtr, 1, ref writepos, 1);
-			ArraySerializerUnsafe.Write(uPtr, 1, ref writepos, 0);
+			ArraySerializeUnsafe.Write(uPtr, 1, ref writepos, 1);
+			ArraySerializeUnsafe.Write(uPtr, 1, ref writepos, 0);
 			ArrayPackBitsExt.WriteSignedPackedBits(uPtr, -17, ref writepos, 17);
-			ArraySerializerUnsafe.Write(uPtr, ulong.MinValue, ref writepos, 64);
-			ArraySerializerUnsafe.Write(uPtr, 666, ref writepos, 64);
-			ArraySerializerUnsafe.Write(uPtr, ulong.MaxValue, ref writepos, 64);
+			ArraySerializeUnsafe.Write(uPtr, ulong.MinValue, ref writepos, 64);
+			ArraySerializeUnsafe.Write(uPtr, 666, ref writepos, 64);
+			ArraySerializeUnsafe.Write(uPtr, ulong.MaxValue, ref writepos, 64);
 		}
 
 		writepos = 0;
@@ -113,12 +113,12 @@ public class BitbufferBench : MonoBehaviour {
 			ulong* uPtr = (ulong*)bPtr;
 			str.Append(
 				"Emo Read byte[] UnSafe : " +
-				ArraySerializerUnsafe.Read(uPtr, ref readpos, 1) + " " +
-				ArraySerializerUnsafe.Read(uPtr, ref readpos, 0) + " " +
+				ArraySerializeUnsafe.Read(uPtr, ref readpos, 1) + " " +
+				ArraySerializeUnsafe.Read(uPtr, ref readpos, 0) + " " +
 				ArrayPackBitsExt.ReadSignedPackedBits(uPtr, ref readpos, 17) + " " +
-				ArraySerializerUnsafe.Read(uPtr, ref readpos, 64) + " " +
-				ArraySerializerUnsafe.Read(uPtr, ref readpos, 64) + " " +
-				ArraySerializerUnsafe.Read(uPtr, ref readpos, 64) + "  :  \n"
+				ArraySerializeUnsafe.Read(uPtr, ref readpos, 64) + " " +
+				ArraySerializeUnsafe.Read(uPtr, ref readpos, 64) + " " +
+				ArraySerializeUnsafe.Read(uPtr, ref readpos, 64) + "  :  \n"
 				);
 		}
 
@@ -245,19 +245,19 @@ public class BitbufferBench : MonoBehaviour {
 				writepos = 0;
 				for (int i = 1; i <= 32; ++i)
 				{
-					ArraySerializerUnsafe.Write(lPtr, 1, ref writepos, i);
-					ArraySerializerUnsafe.Write(lPtr, 1, ref writepos, i);
-					ArraySerializerUnsafe.Write(lPtr, 1, ref writepos, i);
-					ArraySerializerUnsafe.Write(lPtr, 1, ref writepos, i);
+					ArraySerializeUnsafe.Write(lPtr, 1, ref writepos, i);
+					ArraySerializeUnsafe.Write(lPtr, 1, ref writepos, i);
+					ArraySerializeUnsafe.Write(lPtr, 1, ref writepos, i);
+					ArraySerializeUnsafe.Write(lPtr, 1, ref writepos, i);
 				}
 
 				readpos = 0;
 				for (int i = 1; i <= 32; ++i)
 				{
-					ArraySerializerUnsafe.Read(lPtr, ref readpos, i);
-					ArraySerializerUnsafe.Read(lPtr, ref readpos, i);
-					ArraySerializerUnsafe.Read(lPtr, ref readpos, i);
-					ArraySerializerUnsafe.Read(lPtr, ref readpos, i);
+					ArraySerializeUnsafe.Read(lPtr, ref readpos, i);
+					ArraySerializeUnsafe.Read(lPtr, ref readpos, i);
+					ArraySerializeUnsafe.Read(lPtr, ref readpos, i);
+					ArraySerializeUnsafe.Read(lPtr, ref readpos, i);
 				}
 			}
 		}
@@ -277,19 +277,19 @@ public class BitbufferBench : MonoBehaviour {
 				writepos = 0;
 				for (int i = 1; i <= 32; ++i)
 				{
-					ArraySerializerUnsafe.Append(lPtr, 1, ref writepos, i);
-					ArraySerializerUnsafe.Append(lPtr, 1, ref writepos, i);
-					ArraySerializerUnsafe.Append(lPtr, 1, ref writepos, i);
-					ArraySerializerUnsafe.Append(lPtr, 1, ref writepos, i);
+					ArraySerializeUnsafe.Append(lPtr, 1, ref writepos, i);
+					ArraySerializeUnsafe.Append(lPtr, 1, ref writepos, i);
+					ArraySerializeUnsafe.Append(lPtr, 1, ref writepos, i);
+					ArraySerializeUnsafe.Append(lPtr, 1, ref writepos, i);
 				}
 
 				readpos = 0;
 				for (int i = 1; i <= 32; ++i)
 				{
-					ArraySerializerUnsafe.Read(lPtr, ref readpos, i);
-					ArraySerializerUnsafe.Read(lPtr, ref readpos, i);
-					ArraySerializerUnsafe.Read(lPtr, ref readpos, i);
-					ArraySerializerUnsafe.Read(lPtr, ref readpos, i);
+					ArraySerializeUnsafe.Read(lPtr, ref readpos, i);
+					ArraySerializeUnsafe.Read(lPtr, ref readpos, i);
+					ArraySerializeUnsafe.Read(lPtr, ref readpos, i);
+					ArraySerializeUnsafe.Read(lPtr, ref readpos, i);
 				}
 			}
 		}
@@ -388,7 +388,29 @@ public class BitbufferBench : MonoBehaviour {
 		str.Append("\n");
 	}
 
+	public unsafe void test()
+	{
+		byte[] myBuffer = new byte[100];
+		uint val1 = 666;
+		int val2 = -999;
 
+		fixed (byte* bPtr = myBuffer)
+		{
+			// Cast the byte* to ulong*
+			ulong* uPtr = (ulong*)bPtr;
+
+			int writepos = 0;
+			// Two different write methods. Inject() and Write(). 
+			// Both are about the same speed, so it's up to personal preference.
+			//val1.Add(uPtr, ref writepos, 10);
+			ArraySerializeUnsafe.WriteSigned(uPtr, val2, ref writepos, 11);
+
+			readpos = 0;
+			// Unsafe pointers can't be the first argument of extensions, so there is no pretty way to do this.
+			uint restored1 = (uint)ArraySerializeUnsafe.ReadUnsafe(uPtr, ref readpos, 10);
+			int restored2 = ArraySerializeUnsafe.ReadSigned(uPtr, ref readpos, 11);
+		}
+	}
 
 	private void Awake()
 	{

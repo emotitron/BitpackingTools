@@ -33,7 +33,7 @@ using UnityEngine;
 namespace emotitron.Compression
 {
 
-	public static class ArraySerializerUnsafe
+	public static class ArraySerializeUnsafe
 	{
 		private const string bufferOverrunMsg = "Byte buffer overrun. Dataloss will occur.";
 
@@ -222,6 +222,11 @@ namespace emotitron.Compression
 
 				uPtr[index] = (uPtr[index] & ~offsetmask) | (offsetcomp & offsetmask);
 			}
+		}
+
+		public unsafe static void Inject(this uint value, ulong* uPtr, int bitposition, int bits)
+		{
+			Inject((ulong)value, uPtr, bitposition, bits);
 		}
 
 		#region ReadOut UInt64[] To Array

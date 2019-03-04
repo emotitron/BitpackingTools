@@ -47,8 +47,8 @@ namespace emotitron.Compression
 			int sizebits = bytes.UsedBitCount();
 			int valuebytes = value.UsedByteCount();
 
-			ArraySerializerUnsafe.Write(uPtr, (uint)(valuebytes), ref bitposition, (int)sizebits);
-			ArraySerializerUnsafe.Write(uPtr, value, ref bitposition, valuebytes << 3);
+			ArraySerializeUnsafe.Write(uPtr, (uint)(valuebytes), ref bitposition, (int)sizebits);
+			ArraySerializeUnsafe.Write(uPtr, value, ref bitposition, valuebytes << 3);
 
 			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
 			//	" = [" + (int)sizebits + " : " + (valuebytes << 3) + "]  total bits: " + ((int)sizebits + (valuebytes << 3)));
@@ -123,8 +123,8 @@ namespace emotitron.Compression
 
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
-			int valuebits = (int)ArraySerializerUnsafe.Read(uPtr, ref bitposition, sizebits) << 3;
-			return (uint)ArraySerializerUnsafe.Read(uPtr, ref bitposition, valuebits);
+			int valuebits = (int)ArraySerializeUnsafe.Read(uPtr, ref bitposition, sizebits) << 3;
+			return (uint)ArraySerializeUnsafe.Read(uPtr, ref bitposition, valuebits);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBytes.
