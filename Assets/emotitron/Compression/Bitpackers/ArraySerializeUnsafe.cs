@@ -39,23 +39,133 @@ namespace emotitron.Compression
 
 		#region Read/Write Signed Value
 
-		public unsafe static void AppendSigned(ulong* buffer, int value, ref int bitposition, int bits)
-		{
-			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			Append(buffer, zigzag, ref bitposition, bits);
-		}
+		
+		/// <summary>
+		/// Writes value to this unsafe buffer. Uses zigzag encoding to retain the sign value.
+		/// Existing data past this inject is preserved.
+		/// </summary>
 		public unsafe static void WriteSigned(ulong* buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
 			Write(buffer, zigzag, ref bitposition, bits);
 		}
-		public unsafe static void InjectSigned(this int value, ulong* buffer, ref int bitposition, int bits)
+
+		/// <summary>
+		/// Appends value to this unsafe buffer. Uses zigzag encoding to retain the sign value.
+		/// Existing data past this inject is NOT preserved. Only use for sequential writes.
+		/// Use Write() or Inject() for non-linear writes.
+		/// </summary>
+		public unsafe static void AppendSigned(ulong* buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			Write(buffer, zigzag, ref bitposition, bits);
+			Append(buffer, zigzag, ref bitposition, bits);
 		}
 
+		/// <summary>
+		/// Appends this value to the unsafe buffer. Uses zigzag encoding to retain the sign value.
+		/// Existing data past this inject is NOT preserved in exchange for a faster write.
+		/// </summary>
+		public unsafe static void AddSigned(this int value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Append(uPtr, zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Appends this value to the unsafe buffer. Uses zigzag encoding to retain the sign value.
+		/// Existing data past this inject is NOT preserved in exchange for a faster write.
+		/// </summary>
+		public unsafe static void AddSigned(this short value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Append(uPtr, zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Appends this value to the unsafe buffer. Uses zigzag encoding to retain the sign value.
+		/// Existing data past this inject is NOT preserved in exchange for a faster write.
+		/// </summary>
+		public unsafe static void AddSigned(this sbyte value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Append(uPtr, zigzag, ref bitposition, bits);
+		}
+
+		// Inject
+		/// <summary>
+		/// Overwrites this value to the unsafe buffer. Uses zigzag encoding to retain the sign value. 
+		/// Existing data past this inject is preserved.
+		/// </summary>
+		public unsafe static void InjectSigned(this int value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Write(uPtr, zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Overwrites this value to the unsafe buffer. Uses zigzag encoding to retain the sign value. 
+		/// Existing data past this inject is preserved.
+		/// </summary>
+		public unsafe static void InjectSigned(this short value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Write(uPtr, zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Overwrites this value to the unsafe buffer. Uses zigzag encoding to retain the sign value. 
+		/// Existing data past this inject is preserved.
+		/// </summary>
+		public unsafe static void InjectSigned(this sbyte value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Write(uPtr, zigzag, ref bitposition, bits);
+		}
+
+		// Poke
+		/// <summary>
+		/// Overwrites this value to the unsafe buffer. Uses zigzag encoding to retain the sign value.
+		/// Unlike Inject, this does not increment the bitposition and is for one-off injections.
+		/// Existing data past this inject is preserved.
+		/// </summary>
+		public unsafe static void PokeSigned(this int value, ulong* uPtr, int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Write(uPtr, zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Overwrites this value to the unsafe buffer. Uses zigzag encoding to retain the sign value.
+		/// Unlike Inject, this does not increment the bitposition and is for one-off injections.
+		/// Existing data past this inject is preserved.
+		/// </summary>
+		public unsafe static void PokeSigned(this short value, ulong* uPtr, int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Write(uPtr, zigzag, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Overwrites this value to the unsafe buffer. Uses zigzag encoding to retain the sign value.
+		/// Unlike Inject, this does not increment the bitposition and is for one-off injections.
+		/// Existing data past this inject is preserved.
+		/// </summary>
+		public unsafe static void PokeSigned(this sbyte value, ulong* uPtr, int bitposition, int bits)
+		{
+			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			Write(uPtr, zigzag, ref bitposition, bits);
+		}
+
+		// Read
+		/// <summary>
+		/// Returns signed value read from the buffer.
+		/// </summary>
 		public unsafe static int ReadSigned(ulong* uPtr, ref int bitposition, int bits)
+		{
+			uint value = (uint)Read(uPtr, ref bitposition, bits);
+			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+			return zagzig;
+		}
+
+		// Peek
+		/// <summary>
+		/// Returns signed value read from the buffer. Same as Read, only the bitposition is not incremented.
+		/// </summary>
+		public unsafe static int PeekSigned(ulong* uPtr, int bitposition, int bits)
 		{
 			uint value = (uint)Read(uPtr, ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
@@ -92,33 +202,33 @@ namespace emotitron.Compression
 			bitposition += bits;
 		}
 
-		/// <summary>
-		/// Primary Unsafe Add writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
-		/// Add does not preserve existing buffer data past the write point in exchange for a faster write.
-		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
-		/// </summary>
-		/// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
-		/// <param name="value"></param>
-		/// <param name="bitposition"></param>
-		/// <param name="bits"></param>
-		public unsafe static void Add(this ulong value, ulong* uPtr, ref int bitposition, int bits)
-		{
-			if (bits == 0)
-				return;
+		///// <summary>
+		///// Primary Unsafe Add writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
+		///// Add does not preserve existing buffer data past the write point in exchange for a faster write.
+		///// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		///// </summary>
+		///// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
+		///// <param name="value"></param>
+		///// <param name="bitposition"></param>
+		///// <param name="bits"></param>
+		//public unsafe static void Add(this ulong value, ulong* uPtr, ref int bitposition, int bits)
+		//{
+		//	if (bits == 0)
+		//		return;
 
-			const int MAXBITS = 64;
-			const int MODULUS = MAXBITS - 1;
-			int offset = bitposition & MODULUS;
-			int index = bitposition >> 6;
+		//	const int MAXBITS = 64;
+		//	const int MODULUS = MAXBITS - 1;
+		//	int offset = bitposition & MODULUS;
+		//	int index = bitposition >> 6;
 
-			ulong offsetmask = ((1UL << offset) - 1);
+		//	ulong offsetmask = ((1UL << offset) - 1);
 
-			ulong result = (uPtr[index] & offsetmask) | (value << offset);
-			uPtr[index] = result;
-			uPtr[index + 1] = result >> (MAXBITS - offset);
+		//	ulong result = (uPtr[index] & offsetmask) | (value << offset);
+		//	uPtr[index] = result;
+		//	uPtr[index + 1] = result >> (MAXBITS - offset);
 
-			bitposition += bits;
-		}
+		//	bitposition += bits;
+		//}
 
 		/// <summary>
 		/// Primary Unsafe writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
@@ -176,8 +286,6 @@ namespace emotitron.Compression
 			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 6;
 			
-			//System.Diagnostics.Debug.Assert((bitposition + bits) <= (buffer.Length << 3), bufferOverrunMsg);
-
 			ulong mask = ulong.MaxValue >> (64 - bits);
 
 			ulong value = uPtr[index] >> offset;
@@ -188,17 +296,18 @@ namespace emotitron.Compression
 		}
 
 		/// <summary>
-		/// Primary Unsafe Inject. Overwrite existing data without incrementing the passed bitposition. Use for altering previous writes.
-		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// Primary Unsafe Peek. Fast read for byte[] and unit[] by treating them as ulong[].
+		/// Reads value at position without incrementing the bitposition.
+		/// WARNING: There is no bounds checking on this method!
 		/// </summary>
-		/// <param name="value"></param>
 		/// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
 		/// <param name="bitposition"></param>
 		/// <param name="bits"></param>
-		public unsafe static void Inject(this ulong value, ulong* uPtr, int bitposition, int bits)
+		/// <returns>Returns the read value.</returns>
+		public unsafe static ulong Read(ulong* uPtr, int bitposition, int bits)
 		{
 			if (bits == 0)
-				return;
+				return 0;
 
 			const int MAXBITS = 64;
 			const int MODULUS = MAXBITS - 1;
@@ -207,27 +316,243 @@ namespace emotitron.Compression
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
 
-			ulong offsetmask = mask << offset;
-			ulong offsetcomp = value << offset;
+			ulong value = uPtr[index] >> offset;
+			value |= uPtr[index + 1] << (MAXBITS - offset);
 
-			uPtr[index] = (uPtr[index] & ~offsetmask) | (offsetcomp & offsetmask);
-
-			offset = MAXBITS - offset;
-
-			if (offset < 64)
-			{
-				offsetmask = mask >> offset;
-				offsetcomp = value >> offset;
-				index++;
-
-				uPtr[index] = (uPtr[index] & ~offsetmask) | (offsetcomp & offsetmask);
-			}
+			return value & mask;
 		}
 
-		public unsafe static void Inject(this uint value, ulong* uPtr, int bitposition, int bits)
+		#region Secondary Add
+
+		/// <summary>
+		/// Append this value to the unsafe uPtr array. Use for altering previous writes. Does not preserve existing data past the write.
+		/// Use for sequential writes only.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Add(this ulong value, ulong* uPtr, int bitposition, int bits)
 		{
-			Inject((ulong)value, uPtr, bitposition, bits);
+			Append(uPtr, value, ref bitposition, bits);
 		}
+		/// <summary>
+		/// Append this value to the unsafe uPtr array. Use for altering previous writes. Does not preserve existing data past the write.
+		/// Use for sequential writes only.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Add(this uint value, ulong* uPtr, int bitposition, int bits)
+		{
+			Append(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Append this value to the unsafe uPtr array. Use for altering previous writes. Does not preserve existing data past the write.
+		/// Use for sequential writes only.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Add(this ushort value, ulong* uPtr, int bitposition, int bits)
+		{
+			Append(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Append this value to the unsafe uPtr array. Use for altering previous writes. Does not preserve existing data past the write.
+		/// Use for sequential writes only.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Add(this byte value, ulong* uPtr, int bitposition, int bits)
+		{
+			Append(uPtr, value, ref bitposition, bits);
+		}
+
+		/// <summary>
+		/// Append this value to the unsafe uPtr array. Use for altering previous writes. Does not preserve existing data past the write.
+		/// Use for sequential writes only. Sign is ignored and value is cast to ulong.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void AddUnsigned(this long value, ulong* uPtr, int bitposition, int bits)
+		{
+			Append(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Append this value to the unsafe uPtr array. Use for altering previous writes. Does not preserve existing data past the write.
+		/// Use for sequential writes only. Sign is ignored and value is cast to ulong.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void AddUnsigned(this int value, ulong* uPtr, int bitposition, int bits)
+		{
+			Append(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Append this value to the unsafe uPtr array. Use for altering previous writes. Does not preserve existing data past the write.
+		/// Use for sequential writes only. Sign is ignored and value is cast to ulong.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void AddUnsigned(this short value, ulong* uPtr, int bitposition, int bits)
+		{
+			Append(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Append this value to the unsafe uPtr array. Use for altering previous writes. Does not preserve existing data past the write.
+		/// Use for sequential writes only. Sign is ignored and value is cast to ulong.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void AddUnsigned(this sbyte value, ulong* uPtr, int bitposition, int bits)
+		{
+			Append(uPtr, (ulong)value, ref bitposition, bits);
+		}
+
+		#endregion
+
+		#region Secondary Inject
+
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Inject(this ulong value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			Write(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Inject(this uint value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			Write(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Inject(this ushort value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			Write(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Inject(this byte value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			Write(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Sign is ignored and value is cast to ulong.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void InjectUnsigned(this long value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			Write(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Sign is ignored and value is cast to ulong.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void InjectUnsigned(this int value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			Write(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Sign is ignored and value is cast to ulong.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void InjectUnsigned(this short value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Sign is ignored and value is cast to ulong.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void InjectUnsigned(this sbyte value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			Write(uPtr, (ulong)value, ref bitposition, bits);
+		}
+
+		#endregion
+
+		#region Secondary Poke
+
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Same as Inject, only the bitposition is not a ref and is not incremented.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Poke(this ulong value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Same as Inject, only the bitposition is not a ref and is not incremented.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Poke(this uint value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Same as Inject, only the bitposition is not a ref and is not incremented.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Poke(this ushort value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void Poke(this byte value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Sign is ignored and value is cast to ulong.
+		/// Same as Inject, only the bitposition is not a ref and is not incremented.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void InjectUnsigned(this long value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Sign is ignored and value is cast to ulong.
+		/// Same as Inject, only the bitposition is not a ref and is not incremented.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void InjectUnsigned(this int value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Sign is ignored and value is cast to ulong.
+		/// Same as Inject, only the bitposition is not a ref and is not incremented.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void PokeUnsigned(this short value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, (ulong)value, ref bitposition, bits);
+		}
+		/// <summary>
+		/// Write this value to the unsafe uPtr array. Use for altering previous writes. Preserves existing data past the write.
+		/// Sign is ignored and value is cast to ulong.
+		/// Same as Inject, only the bitposition is not a ref and is not incremented.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		public unsafe static void PokeUnsigned(this sbyte value, ulong* uPtr, int bitposition, int bits)
+		{
+			Write(uPtr, (ulong)value, ref bitposition, bits);
+		}
+
+		#endregion
+
 
 		#region ReadOut UInt64[] To Array
 

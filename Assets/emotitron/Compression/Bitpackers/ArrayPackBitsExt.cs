@@ -39,7 +39,7 @@ namespace emotitron.Compression
 		/// EXPERIMENTAL: Primary UNSAFE WritePacked Method.
 		/// </summary>
 		/// <param name="countbits"></param>
-		public unsafe static void WritePackedBitsUnsafe(ulong* uPtr, ulong value, ref int bitposition, int bits)
+		public unsafe static void WritePackedBits(ulong* uPtr, ulong value, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -176,7 +176,7 @@ namespace emotitron.Compression
 		public unsafe static void WriteSignedPackedBits(ulong* uPtr, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			WritePackedBitsUnsafe(uPtr, zigzag, ref bitposition, bits);
+			WritePackedBits(uPtr, zigzag, ref bitposition, bits);
 		}
 
 		/// <summary>
