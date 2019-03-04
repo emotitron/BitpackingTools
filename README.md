@@ -8,7 +8,7 @@ If you find these tools useful and would like to contribute, my paypal is davinc
 ```cs
 buffer.Write(value, ref int bitposition, int bits)
 ```
-Writes the least signifigant ``bits`` of the ``value`` into the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``.
+Writes the least significant ``bits`` of the ``value`` into the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``.
 
 ### Read
 ```
@@ -22,20 +22,20 @@ Returns x ``bits`` from read from the ``buffer``starting at ``bitposition``. The
 value.Inject(buffer, ref int bitposition, int bits)
 ```
 Same as _Write()_, but with a different order of arguments.
-Writes the least signifigant ``bits`` of the ``value`` into the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the write is preserved, allowing for non-linear injection of values.
+Writes the least significant ``bits`` of the ``value`` into the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the write is preserved, allowing for non-linear injection of values.
 
 ### Append
 ```cs
 buffer.Append(value, ref int bitposition, int bits)
 ```
-Similar to Write, this method Appends the least signifigant ``bits`` of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. However, xxisting data past the bitposition is not preserved to increase the write speed. Use only for sequential writes, and use Write() and Inject() for non-linear insertions.
+Similar to Write, this method Appends the least significant ``bits`` of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. However, xxisting data past the bitposition is not preserved to increase the write speed. Use only for sequential writes, and use Write() and Inject() for non-linear insertions.
 
 ### Add
 ```cs
 value.Add(buffer, ref int bitposition, int bits)
 ```
 Same as _Append()_, but with a different order of arguments.
-Appends the least signifigant ''bits'' of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the bitposition is not preserved, so this is only mean for faster sequential writes.
+Appends the least significant ''bits'' of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the bitposition is not preserved, so this is only mean for faster sequential writes.
 
 ### Peek
 ```
@@ -178,7 +178,7 @@ MAX = 18446744073709551615 with 71 written bits
 For 32 bits of variable size, there is a 6 bit sizer added, making this less than ideal if the values will be large. However if the values often stay closer to zero, this can save quite a bit of space. Note that a value of zero only took 6 bits, and a value of -100 only took 14 bits.
 
 ### PackedBits
-Values serialized using ``WritePackedBits()`` are checked for the position of the highest used signifigant bit. All zero bits on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info.
+Values serialized using ``WritePackedBits()`` are checked for the position of the highest used signifigant bit. All zero bits on the left of the value are not serialized, and the value is preceded by a write of several bits for size info.
 
 | sizer | bits | break even  |
 |-------|------|-------------|
@@ -188,7 +188,7 @@ Values serialized using ``WritePackedBits()`` are checked for the position of th
 | 7     | 64   | 1.44115E+17 |
 
 ### PackedBytes
-PackedBytes work in a similar way to PackedBits, except rather than counting bits, it counts used bytes. Values serialized using ``WritePackedBytes()`` are checked for the position of the highest used signifigant bit, and that is rounded up the the nearest byte. All empty bytes on the left of the value are not serialized, and the value is preceeded by a write of several bits for size info. The resulting compression is similar in size to Varints. The disadvantage of PackedBytes vs PackedBits is the rounding up to the nearest whole number of bytes, which may or may not be worth the reduced sizer size. It also has a lower threshold of where there is a savings.
+PackedBytes work in a similar way to PackedBits, except rather than counting bits, it counts used bytes. Values serialized using ``WritePackedBytes()`` are checked for the position of the highest used significant bit, and that is rounded up the the nearest byte. All empty bytes on the left of the value are not serialized, and the value is preceded by a write of several bits for size info. The resulting compression is similar in size to Varints. The disadvantage of PackedBytes vs PackedBits is the rounding up to the nearest whole number of bytes, which may or may not be worth the reduced sizer size. It also has a lower threshold of where there is a savings.
 
 | sizer | bits | break even  |
 |-------|------|-------------|
@@ -199,3 +199,4 @@ PackedBytes work in a similar way to PackedBits, except rather than counting bit
 
 ### SignedPackedBits / SignedPackedBytes
 Signed types (int, short and sbyte) are automatically zigzagged to move the sign bit from the msb position to the lsb position, keeping the pattern of "closer to zero, the smaller the write" true for negative numbers.
+
