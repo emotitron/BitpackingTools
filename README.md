@@ -1,6 +1,8 @@
 # BitpackingTools
 Bitpacking/serialization libraries used interally for Unity Store <a href="https://assetstore.unity.com/packages/tools/network/network-sync-transform-nst-98453">NetworkSyncTransform</a> and <a href="https://assetstore.unity.com/packages/tools/network/transform-crusher-free-version-117313">TransformCrusher</a> Assets.
 
+If you find these tools useful and would like to contribute, my paypal is davincarten@yahoo.com.
+
 ## Primary Methods:
 ### Write
 ```cs
