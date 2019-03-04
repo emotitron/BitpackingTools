@@ -10,7 +10,7 @@ The Array Serializer extension lets you bitpack directly to and from byte[], uin
 
 ### Basic Usage:
 ```cs
- byte[] myBuffer = new byte[64];
+byte[] myBuffer = new byte[64];
 
 int writepos = 0;
 myBuffer.WriteBool(true, ref writepos);
@@ -25,25 +25,26 @@ uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
 ### Advanced Usage (Unsafe)
 For sequential writes and reads of a byte[] or uint[] arrays, there are unsafe methods that internally treat these arrays as a ulong[], resulting in up to 4x faster reads and writes. These are all contained in ArraySerializerUnsafe.cs, which can be deleted for projects where you don't want to enable Allow Unsafe Code.
 ```cs
-byte[] myBuffer = byte[100];
-uint val1 = 666;
-int val2 = -999;
-
-fixed (byte* bPtr = myBuffer)
+public unsafe void UnsafeWrites()
 {
-  // Cast the byte* to ulong*
-  ulong* uPtr = (ulong*)bPtr;
-  
-  int writepos = 0;
-  // Two different write methods. Inject() and Write(). 
-  // Both are about the same speed, so it's up to personal preference.
-  val1.InjectUnsafe(uPtr, ref writepos, 10);
-  ArraySerializeUnsafe.WriteSigned(uPtr, val2, ref writepos, 11);
+	byte[] myBuffer = new byte[100];
+	uint val1 = 666;
+	int val2 = -999;
 
-  readpos = 0;
-  // Unsafe pointers can't be the first argument of extensions, so there is no pretty way to do this.
-  uint restored1 = (uint)ArraySerializeUnsafe.ReadUnsafe(uPtr, ref readpos, 10);
-  int restored2 = ArraySerializeUnsafe.ReadSigned(uPtr, ref readpos, 11);
+	// Pin the array before long sequences of reads or writes.
+	fixed (byte* bPtr = myBuffer)
+	{
+		// Cast the byte* to ulong*
+		ulong* uPtr = (ulong*)bPtr;
+
+		int writepos = 0;
+		ArraySerializeUnsafe.Write(uPtr, val1, ref writepos, 10);
+		ArraySerializeUnsafe.WriteSigned(uPtr, val2, ref writepos, 11);
+
+		int readpos = 0;
+		uint restored1 = (uint)ArraySerializeUnsafe.Read(uPtr, ref readpos, 10);
+		int restored2 = ArraySerializeUnsafe.ReadSigned(uPtr, ref readpos, 11);
+	}
 }
 ```
 
@@ -53,18 +54,21 @@ The Primitive Serializer extension lets you bitpack directly to and from ulong, 
 
 ### Basic Usage:
 ```cs
-  ulong myBuffer = 0;
-  
-  int writepos = 0;
-  // Note that primitives are reference types, so the return value needs to be applied.
-  myBuffer = myBuffer.WritetBool(true, ref writepos);
-  myBuffer = myBuffer.WriteSigned(-666, ref writepos, 11);
-  myBuffer = myBuffer.Write(999, ref writepos, 10);
-  
-  int readpos = 0;
-  bool restoredbool = myBuffer.ReadBool(ref readpos);
-  int restoredval1 = myBuffer.ReadSigned(ref readpos, 11);
-  uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
+public unsafe void SafePrimitiveWrites()
+{
+	ulong myBuffer = 0;
+
+	int writepos = 0;
+	// Note that primitives are reference types, so the return value needs to be applied.
+	myBuffer = myBuffer.WritetBool(true, ref writepos);
+	myBuffer = myBuffer.WriteSigned(-666, ref writepos, 11);
+	myBuffer = myBuffer.Write(999, ref writepos, 10);
+
+	int readpos = 0;
+	bool restoredbool = myBuffer.ReadBool(ref readpos);
+	int restoredval1 = myBuffer.ReadSigned(ref readpos, 11);
+	uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
+}
 ```
 
 ### Alternative Usage
