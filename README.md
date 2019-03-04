@@ -10,22 +10,25 @@ The Array Serializer extension lets you bitpack directly to and from byte[], uin
 
 ### Basic Usage:
 ```cs
-byte[] myBuffer = new byte[64];
+public unsafe void SafeArrayWrites()
+{
+	byte[] myBuffer = new byte[64];
 
-int writepos = 0;
-myBuffer.WriteBool(true, ref writepos);
-myBuffer.WriteSigned(-666, ref writepos, 11);
-myBuffer.Write(999, ref writepos, 10);
+	int writepos = 0;
+	myBuffer.WriteBool(true, ref writepos);
+	myBuffer.WriteSigned(-666, ref writepos, 11);
+	myBuffer.Write(999, ref writepos, 10);
 
-int readpos = 0;
-bool restoredbool = myBuffer.ReadBool(ref readpos);
-int restoredval1 = myBuffer.ReadSigned(ref readpos, 11);
-uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
+	int readpos = 0;
+	bool restoredbool = myBuffer.ReadBool(ref readpos);
+	int restoredval1 = myBuffer.ReadSigned(ref readpos, 11);
+	uint restoredval2 = (uint)myBuffer.Read(ref readpos, 10);
+}
 ```
 ### Advanced Usage (Unsafe)
 For sequential writes and reads of a byte[] or uint[] arrays, there are unsafe methods that internally treat these arrays as a ulong[], resulting in up to 4x faster reads and writes. These are all contained in ArraySerializerUnsafe.cs, which can be deleted for projects where you don't want to enable Allow Unsafe Code.
 ```cs
-public unsafe void UnsafeWrites()
+public unsafe void UnsafeArrayWrites()
 {
 	byte[] myBuffer = new byte[100];
 	uint val1 = 666;
@@ -74,34 +77,47 @@ public unsafe void SafePrimitiveWrites()
 ### Alternative Usage
 An alternative to Write() is Inject(), which has the value being written as the first argument, allowing us to pass the buffer as a reference. NOTE: There is no return value on this method, as the buffer is passed by reference and is altered by the method.
 ```cs
-  int writepos = 0;
-  // Note that the buffer is passed by reference, and is altered by the method.
-  true.Inject(ref myBuffer, ref writepos);
-  (-666).InjectSigned(ref myBuffer, ref writepos, 11);
-  999.InjectUnsigned(ref myBuffer, ref writepos, 10);
+ public unsafe void PrimitiveInjects()
+{
+	ulong myBuffer = 0;
+
+	int writepos = 0;
+	// Note that the buffer is passed by reference, and is altered by the method.
+	true.Inject(ref myBuffer, ref writepos);
+	(-666).InjectSigned(ref myBuffer, ref writepos, 11);
+	999.InjectUnsigned(ref myBuffer, ref writepos, 10);
+}
  ```
 
 ## PackedBits and PackedBytes
 For fields that have large potential ranges, but have values that hover at or near zero there are PackedBits and PackedBytes serialization options.
 
 ```cs
-int holdpos, writepos = 0, readpos = 0;
+public unsafe void WritePackedBits()
+{
+	int holdpos, writepos = 0, readpos = 0;
 
-buffer.WriteSignedPackedBits(0, ref writepos, 32);
-buffer.WriteSignedPackedBits(-100, ref writepos, 32);
-buffer.WriteSignedPackedBits(int.MinValue, ref writepos, 32);
+	buffer.WriteSignedPackedBits(0, ref writepos, 32);
+	buffer.WriteSignedPackedBits(-100, ref writepos, 32);
+	buffer.WriteSignedPackedBits(int.MinValue, ref writepos, 32);
+	buffer.WritePackedBits(ulong.MaxValue, ref writepos, 64);
 
-holdpos = readpos;
-int restored1 = buffer.ReadSignedPackedBits(ref readpos, 32);
-Debug.Log("ZERO = " + restored1 + " with " + (readpos - holdpos) + " written bits");
+		holdpos = readpos;
+	int restored1 = buffer.ReadSignedPackedBits(ref readpos, 32);
+	Debug.Log("ZERO = " + restored1 + " with " + (readpos - holdpos) + " written bits");
 
-holdpos = readpos;
-int restored2 = buffer.ReadSignedPackedBits(ref readpos, 32);
-Debug.Log("-100 = " + restored2 + " with " + (readpos - holdpos) + " written bits");
+	holdpos = readpos;
+	int restored2 = buffer.ReadSignedPackedBits(ref readpos, 32);
+	Debug.Log("-100 = " + restored2 + " with " + (readpos - holdpos) + " written bits");
 
-holdpos = readpos;
-int restored3 = buffer.ReadSignedPackedBits(ref readpos, 32);
-Debug.Log("MIN = " + restored3 + " with " + (readpos - holdpos) + " written bits");
+	holdpos = readpos;
+	int restored3 = buffer.ReadSignedPackedBits(ref readpos, 32);
+	Debug.Log("MIN = " + restored3 + " with " + (readpos - holdpos) + " written bits");
+
+	holdpos = readpos;
+	ulong restored4 = buffer.ReadPackedBits(ref readpos, 64);
+	Debug.Log("MAX = " + restored4 + " with " + (readpos - holdpos) + " written bits");
+}
 ```
 
 This returns the results of 
@@ -109,6 +125,7 @@ This returns the results of
 ZERO = 0 with 6 written bits
 -100 = -100 with 14 written bits
 MIN = -2147483648 with 38 written bits
+MAX = 18446744073709551615 with 71 written bits
 ```
 For 32 bits of variable size, there is a 6 bit sizer added, making this less than ideal if the values will be large. However if the values often stay closer to zero, this can save quite a bit of space. Note that a value of zero only took 6 bits, and a value of -100 only took 14 bits.
 
