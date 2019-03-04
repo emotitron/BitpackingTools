@@ -963,9 +963,7 @@ namespace emotitron.Compression
 
 		#endregion
 
-
-		#region Extract - Uint64 Buffer
-
+		#region Read - Uint64 Buffer
 
 		/// <summary>
 		/// Read a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
@@ -1009,8 +1007,7 @@ namespace emotitron.Compression
 
 		#endregion
 
-		#region Extract - Uint32 Buffer
-
+		#region Read - Uint32 Buffer
 
 		/// <summary>
 		/// Read a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
@@ -1053,7 +1050,7 @@ namespace emotitron.Compression
 
 		#endregion
 
-		#region Extract - Uint16 Buffer
+		#region Read - Uint16 Buffer
 
 		/// <summary>
 		/// Read a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 
@@ -1082,7 +1079,7 @@ namespace emotitron.Compression
 
 		#endregion
 
-		#region Extract - Uint8 Buffer
+		#region Read - Uint8 Buffer
 
 		/// <summary>
 		/// Read a value from a source primitive (the buffer) by reading x bits starting at the bitposition, and return the reconstructed value. 

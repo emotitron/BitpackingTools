@@ -22,6 +22,9 @@
 * THE SOFTWARE.
 */
 
+#if DEVELOPMENT_BUILD
+#define UNITY_ASSERTIONS
+#endif
 
 using System.Collections;
 using System.Collections.Generic;
@@ -32,7 +35,6 @@ namespace emotitron.Compression
 
 	public static class ArraySerializerUnsafe
 	{
-
 		private const string bufferOverrunMsg = "Byte buffer overrun. Dataloss will occur.";
 
 		#region Read/Write Signed Value
@@ -40,22 +42,22 @@ namespace emotitron.Compression
 		public unsafe static void AppendSigned(ulong* buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			AppendUnsafe(buffer, zigzag, ref bitposition, bits);
+			Append(buffer, zigzag, ref bitposition, bits);
 		}
 		public unsafe static void WriteSigned(ulong* buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			WriteUnsafe(buffer, zigzag, ref bitposition, bits);
+			Write(buffer, zigzag, ref bitposition, bits);
 		}
 		public unsafe static void InjectSigned(this int value, ulong* buffer, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
-			WriteUnsafe(buffer, zigzag, ref bitposition, bits);
+			Write(buffer, zigzag, ref bitposition, bits);
 		}
 
 		public unsafe static int ReadSigned(ulong* uPtr, ref int bitposition, int bits)
 		{
-			uint value = (uint)ReadUnsafe(uPtr, ref bitposition, bits);
+			uint value = (uint)Read(uPtr, ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
 		}
@@ -71,24 +73,49 @@ namespace emotitron.Compression
 		/// <param name="value"></param>
 		/// <param name="bitposition"></param>
 		/// <param name="bits"></param>
-		public unsafe static void AppendUnsafe(ulong* uPtr, ulong value, ref int bitposition, int bits)
+		public unsafe static void Append(ulong* uPtr, ulong value, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return;
+
 			const int MAXBITS = 64;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS;
 			int index = bitposition >> 6;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 6);
 
-			// Offset both the mask and the compressed value using the remainder as the offset
 			ulong offsetmask = ((1UL << offset) - 1);
 
-			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 5), bufferOverrunMsg);
+			ulong result = (uPtr[index] & offsetmask) | (value << offset);
+			uPtr[index] = result;
+			uPtr[index + 1] = result >> (MAXBITS - offset);
 
-			ulong comp = uPtr[index] & offsetmask;
-			ulong result = comp | (value << offset);
-			uPtr[index] = (uint)result;
-			uPtr[index + 1] = (uint)(result >> MAXBITS);
+			bitposition += bits;
+		}
+
+		/// <summary>
+		/// Primary Unsafe Add writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
+		/// Add does not preserve existing buffer data past the write point in exchange for a faster write.
+		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
+		/// </summary>
+		/// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
+		/// <param name="value"></param>
+		/// <param name="bitposition"></param>
+		/// <param name="bits"></param>
+		public unsafe static void Add(this ulong value, ulong* uPtr, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			const int MAXBITS = 64;
+			const int MODULUS = MAXBITS - 1;
+			int offset = bitposition & MODULUS;
+			int index = bitposition >> 6;
+
+			ulong offsetmask = ((1UL << offset) - 1);
+
+			ulong result = (uPtr[index] & offsetmask) | (value << offset);
+			uPtr[index] = result;
+			uPtr[index + 1] = result >> (MAXBITS - offset);
 
 			bitposition += bits;
 		}
@@ -101,43 +128,34 @@ namespace emotitron.Compression
 		/// <param name="value"></param>
 		/// <param name="bitposition"></param>
 		/// <param name="bits"></param>
-		public unsafe static void WriteUnsafe(ulong* uPtr, ulong value, ref int bitposition, int bits)
+		public unsafe static void Write(ulong* uPtr, ulong value, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return;
 
 			const int MAXBITS = 64;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS;
 			int index = bitposition >> 6;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 6);
 
-			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
-
-			// Offset both the mask and the compressed value using the remainder as the offset
 			ulong mask = ulong.MaxValue >> (64 - bits);
 
-			ulong offsetmask = mask << -offset;
-			ulong offsetcomp = (ulong)value << -offset;
+			ulong offsetmask = mask << offset;
+			ulong offsetcomp = value << offset;
 
-			while (true)
+			uPtr[index] = (uPtr[index] & ~offsetmask) | (offsetcomp & offsetmask);
+
+			offset = MAXBITS - offset;
+
+			if (offset < 64)
 			{
-				// set the unwritten bits in byte[] to zero as a safety
-				uPtr[index] &= (ulong)~offsetmask; // set bits to zero
-				uPtr[index] |= (ulong)(offsetcomp & offsetmask);
-
-				if (index == endindex)
-					break;
-
-				// Push the compressed value and the mask to align with the next array element
-				offset += MAXBITS;
 				offsetmask = mask >> offset;
-				offsetcomp = (ulong)value >> offset;
+				offsetcomp = value >> offset;
 				index++;
-			}
 
-			bitposition = endpos;
+				uPtr[index] = (uPtr[index] & ~offsetmask) | (offsetcomp & offsetmask);
+			}
+			bitposition += bits;
 		}
 
 		/// <summary>
@@ -148,88 +166,62 @@ namespace emotitron.Compression
 		/// <param name="bitposition"></param>
 		/// <param name="bits"></param>
 		/// <returns>Returns the read value.</returns>
-		public unsafe static ulong ReadUnsafe(ulong* uPtr, ref int bitposition, int bits)
+		public unsafe static ulong Read(ulong* uPtr, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return 0;
 
 			const int MAXBITS = 64;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 6;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 6);
-
-			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+			
+			//System.Diagnostics.Debug.Assert((bitposition + bits) <= (buffer.Length << 3), bufferOverrunMsg);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong line = ((ulong)uPtr[index] >> -offset);
-			ulong value = 0;
 
-			while (true)
-			{
-				value |= (line & mask);
+			ulong value = uPtr[index] >> offset;
+			value |= uPtr[index + 1] << (MAXBITS - offset);
 
-				if (index == endindex)
-					break;
-
-				offset += MAXBITS;
-				index++;
-				line = ((ulong)uPtr[index] << offset);
-			}
-
-			bitposition = bitposition + bits;
-			return value;
+			bitposition += bits;
+			return value & mask;
 		}
 
 		/// <summary>
-		/// Primary Unsafe writer. Faster method for writing to byte[] or uint[] buffers. Uses unsafe to treat them as ulong[].
+		/// Primary Unsafe Inject. Overwrite existing data without incrementing the passed bitposition. Use for altering previous writes.
 		/// WARNING: There is no bounds checking on this. If you write too far, you will crash.
 		/// </summary>
 		/// <param name="value"></param>
 		/// <param name="uPtr">Cast your byte* or uint* to ulong*</param>
 		/// <param name="bitposition"></param>
 		/// <param name="bits"></param>
-		public unsafe static void InjectUnsafe(this ulong value, ulong* uPtr, ref int bitposition, int bits)
+		public unsafe static void Inject(this ulong value, ulong* uPtr, int bitposition, int bits)
 		{
 			if (bits == 0)
 				return;
 
 			const int MAXBITS = 64;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 6;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 6);
 
-			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
-
-			// Offset both the mask and the compressed value using the remainder as the offset
 			ulong mask = ulong.MaxValue >> (64 - bits);
 
-			ulong offsetmask = mask << -offset;
-			ulong offsetcomp = (ulong)value << -offset;
+			ulong offsetmask = mask << offset;
+			ulong offsetcomp = value << offset;
 
-			while (true)
+			uPtr[index] = (uPtr[index] & ~offsetmask) | (offsetcomp & offsetmask);
+
+			offset = MAXBITS - offset;
+
+			if (offset < 64)
 			{
-				// set the unwritten bits in byte[] to zero as a safety
-				uPtr[index] &= (ulong)~offsetmask; // set bits to zero
-				uPtr[index] |= (ulong)(offsetcomp & offsetmask);
-
-				if (index == endindex)
-					break;
-
-				// Push the compressed value and the mask to align with the next array element
-				offset += MAXBITS;
 				offsetmask = mask >> offset;
-				offsetcomp = (ulong)value >> offset;
+				offsetcomp = value >> offset;
 				index++;
+
+				uPtr[index] = (uPtr[index] & ~offsetmask) | (offsetcomp & offsetmask);
 			}
-
-			if (endpos > bitposition)
-				bitposition = endpos;
-
-			return;
 		}
 
 		#region ReadOut UInt64[] To Array
@@ -253,8 +245,8 @@ namespace emotitron.Compression
 			while (remaining > 0)
 			{
 				int cnt = remaining > 64 ? 64 : remaining;
-				ulong val = ReadUnsafe(sourcePtr, ref readpos, cnt);
-				WriteUnsafe(targetPtr, val, ref targetPos, cnt);
+				ulong val = Read(sourcePtr, ref readpos, cnt);
+				Write(targetPtr, val, ref targetPos, cnt);
 
 				remaining -= cnt;
 			}
@@ -289,8 +281,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}
@@ -326,8 +318,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}
@@ -360,8 +352,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}
@@ -402,8 +394,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}
@@ -440,8 +432,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}
@@ -476,8 +468,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}
@@ -518,8 +510,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}
@@ -556,8 +548,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}
@@ -593,8 +585,8 @@ namespace emotitron.Compression
 				while (remaining > 0)
 				{
 					int cnt = remaining > 64 ? 64 : remaining;
-					ulong val = ReadUnsafe(sPtr, ref readpos, cnt);
-					WriteUnsafe(tPtr, val, ref targetPos, cnt);
+					ulong val = Read(sPtr, ref readpos, cnt);
+					Write(tPtr, val, ref targetPos, cnt);
 
 					remaining -= cnt;
 				}

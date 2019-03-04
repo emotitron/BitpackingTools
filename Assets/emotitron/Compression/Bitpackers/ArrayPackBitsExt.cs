@@ -22,6 +22,10 @@
 * THE SOFTWARE.
 */
 
+#if DEVELOPMENT_BUILD
+#define UNITY_ASSERTIONS
+#endif
+
 namespace emotitron.Compression
 {
 	/// <summary>
@@ -37,12 +41,15 @@ namespace emotitron.Compression
 		/// <param name="countbits"></param>
 		public unsafe static void WritePackedBitsUnsafe(ulong* uPtr, ulong value, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return;
+
 			int valuebits = value.UsedBitCount();
 			int sizebits = bits.UsedBitCount();
-			ArraySerializerUnsafe.WriteUnsafe(uPtr, (uint)(valuebits), ref bitposition, (int)sizebits);
-			ArraySerializerUnsafe.WriteUnsafe(uPtr, value, ref bitposition, valuebits);
+			ArraySerializerUnsafe.Write(uPtr, (uint)(valuebits), ref bitposition, sizebits);
+			ArraySerializerUnsafe.Write(uPtr, value, ref bitposition, valuebits);
 
-			//UnityEngine.Debug.Log(value + " = ones : " + valuebits + " / " + (int)sizebits + "  total bits: " + ((int)sizebits + valuebits));
+			//UnityEngine.Debug.Log("Write Unsafe PBits " + value + " = " + sizebits + " : " + valuebits);
 		}
 
 		/// <summary>
@@ -51,12 +58,15 @@ namespace emotitron.Compression
 		/// <param name="countbits"></param>
 		public static void WritePackedBits(this ulong[] buffer, ulong value, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return;
+
 			int valuebits = value.UsedBitCount();
 			int sizebits = bits.UsedBitCount();
 			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
 			buffer.Write(value, ref bitposition, valuebits);
 
-			//UnityEngine.Debug.Log(value + " = ones : " + valuebits + " / " + (int)sizebits + "  total bits: " + ((int)sizebits + valuebits));
+			//UnityEngine.Debug.Log("Write ulong[] PBits " + value + " = " + sizebits + " : " + valuebits);
 		}
 		
 		/// <summary>
@@ -65,12 +75,15 @@ namespace emotitron.Compression
 		/// <param name="countbits"></param>
 		public static void WritePackedBits(this uint[] buffer, ulong value, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return;
+
 			int valuebits = value.UsedBitCount();
 			int sizebits = bits.UsedBitCount();
-			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
+			buffer.Write((ulong)(valuebits), ref bitposition, (int)sizebits);
 			buffer.Write(value, ref bitposition, valuebits);
 
-			//UnityEngine.Debug.Log(value + " = ones : " + valuebits + " / " + (int)sizebits + "  total bits: " + ((int)sizebits + valuebits));
+			//UnityEngine.Debug.Log("Write uint[] PBits " + value + " = " + sizebits + " : " + valuebits);
 		}
 		/// <summary>
 		/// EXPERIMENTAL: Primary WritePacked Method
@@ -83,7 +96,7 @@ namespace emotitron.Compression
 			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
 			buffer.Write(value, ref bitposition, valuebits);
 
-			//UnityEngine.Debug.Log(value + " = ones : " + valuebits + " / " + (int)sizebits + "  total bits: " + ((int)sizebits + valuebits));
+			//UnityEngine.Debug.Log("Write byte[] PBits " + value + " = " + sizebits + " : " + valuebits);
 		}
 
 		#endregion
@@ -95,9 +108,13 @@ namespace emotitron.Compression
 		/// </summary>
 		public unsafe static ulong ReadPackedBits(ulong* uPtr, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return 0;
+
 			int sizebits = bits.UsedBitCount();
-			int valuebits = (int)ArraySerializerUnsafe.ReadUnsafe(uPtr, ref bitposition, sizebits);
-			return ArraySerializerUnsafe.ReadUnsafe(uPtr, ref bitposition, valuebits);
+			int valuebits = (int)ArraySerializerUnsafe.Read(uPtr, ref bitposition, sizebits);
+			//UnityEngine.Debug.Log("Read Packedunsafe sizer/value : " + sizebits + " : " + valuebits);
+			return ArraySerializerUnsafe.Read(uPtr, ref bitposition, valuebits);
 		}
 
 		/// <summary>
@@ -105,27 +122,45 @@ namespace emotitron.Compression
 		/// </summary>
 		public static ulong ReadPackedBits(this ulong[] buffer, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return 0;
+
 			int sizebits = bits.UsedBitCount();
 			int valuebits = (int)buffer.Read(ref bitposition, sizebits);
-			return buffer.Read(ref bitposition, valuebits);
+			ulong value = buffer.Read(ref bitposition, valuebits);
+			//UnityEngine.Debug.Log("Read Packed ulong[] " + value + " sizer/value : " + sizebits + " : " + valuebits);
+			return value;
 		}
 		/// <summary>
 		/// Primary Reader for PackedBits.
 		/// </summary>
 		public static ulong ReadPackedBits(this uint[] buffer, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return 0;
+
 			int sizebits = bits.UsedBitCount();
 			int valuebits = (int)buffer.Read(ref bitposition, sizebits);
-			return buffer.Read(ref bitposition, valuebits);
+			ulong value = buffer.Read(ref bitposition, valuebits);
+			//UnityEngine.Debug.Log("Read Packed uint[] " + value + " sizer/value : " + sizebits + " : " + valuebits);
+
+			return value;
+
+
 		}
 		/// <summary>
 		/// Primary Reader for PackedBits.
 		/// </summary>
 		public static ulong ReadPackedBits(this byte[] buffer, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return 0;
+
 			int sizebits = bits.UsedBitCount();
 			int valuebits = (int)buffer.Read(ref bitposition, sizebits);
-			return buffer.Read(ref bitposition, valuebits);
+			ulong value = buffer.Read(ref bitposition, valuebits);
+			//UnityEngine.Debug.Log("Read Packed byte[] " + value + " sizer/value : " + sizebits + " : " + valuebits);
+			return value;
 		}
 
 		#endregion
@@ -196,6 +231,7 @@ namespace emotitron.Compression
 			uint value = (uint)buffer.ReadPackedBits(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
 			return zagzig;
+
 		}
 
 		// byte[]

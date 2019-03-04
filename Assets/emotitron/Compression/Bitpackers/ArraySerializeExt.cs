@@ -22,6 +22,10 @@
 * THE SOFTWARE.
 */
 
+#if DEVELOPMENT_BUILD
+#define UNITY_ASSERTIONS
+#endif
+
 namespace emotitron.Compression
 {
 
@@ -96,6 +100,115 @@ namespace emotitron.Compression
 
 		#endregion
 
+		#region Primary Append
+
+		/// <summary>
+		/// Faster Primary Write method specifically specifically for sequential writes. 
+		/// Doesn't preserve existing data past the write point in exchnage for a faster write.
+		/// </summary>
+		/// <param name="buffer"></param>
+		/// <param name="value"></param>
+		/// <param name="bitposition"></param>
+		/// <param name="bits"></param>
+		public static void Append(this byte[] buffer, ulong value, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			const int MAXBITS = 8;
+			const int MODULUS = MAXBITS - 1;
+			int offset = (bitposition & MODULUS); // this is just a modulus
+			int index = bitposition >> 3;
+
+			ulong offsetmask = ((1UL << offset) - 1);
+
+			ulong comp = buffer[index] & offsetmask;
+			ulong result = comp | (value << offset);
+
+			buffer[index] = (byte)result;
+
+			offset = MAXBITS - offset;
+			while (offset < 64)
+			{
+				index++;
+				buffer[index] = (byte)((value >> offset));
+				offset = offset + MAXBITS;
+			}
+			bitposition += bits;
+		}
+
+		public static void Append(this uint[] buffer, ulong value, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			const int MAXBITS = 32;
+			const int MODULUS = MAXBITS - 1;
+			int offset = bitposition & MODULUS; // this is just a modulus
+			int index = bitposition >> 5;
+
+			ulong offsetmask = ((1UL << offset) - 1);
+
+			ulong comp = buffer[index] & offsetmask;
+			ulong result = comp | (value << offset);
+
+			buffer[index] = (uint)result;
+
+			offset = MAXBITS - offset;
+			while (offset < 64)
+			{
+				index++;
+				buffer[index] = (uint)((value >> offset));
+				offset = offset + MAXBITS;
+			}
+			bitposition += bits;
+		}
+		/// <summary>
+		/// Faster Primary Write method specifically specifically for sequential writes. 
+		/// Doesn't preserve existing data past the write point in exchnage for a faster write.
+		/// </summary>
+		public static void Append(this uint[] buffer, uint value, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			const int MAXBITS = 32;
+			const int MODULUS = MAXBITS - 1;
+			int offset = bitposition & MODULUS; // this is just a modulus
+			int index = bitposition >> 5;
+
+			ulong offsetmask = ((1UL << offset) - 1);
+			ulong comp = buffer[index] & offsetmask;
+			ulong result = comp | ((ulong)value << offset);
+
+			buffer[index] = (uint)result;
+			buffer[index + 1] = (uint)(result >> MAXBITS);
+
+			bitposition += bits;
+		}
+
+		public static void Append(this ulong[] buffer, ulong value, ref int bitposition, int bits)
+		{
+			if (bits == 0)
+				return;
+
+			const int MAXBITS = 64;
+			const int MODULUS = MAXBITS - 1;
+			int offset = bitposition & MODULUS; // this is just a modulus
+			int index = bitposition >> 6;
+
+			ulong offsetmask = ((1UL << offset) - 1);
+			ulong comp = buffer[index] & offsetmask;
+			ulong result = comp | (value << offset);
+
+			buffer[index] = result;
+			buffer[index + 1] = value >> (MAXBITS - offset);
+
+			bitposition += bits;
+		}
+
+		#endregion
+
 		#region Primary Writers
 
 		/// <summary>
@@ -113,39 +226,36 @@ namespace emotitron.Compression
 
 			const int MAXBITS = 8;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS;
 			int index = bitposition >> 3;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 3);
-
-			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 3), bufferOverrunMsg);
-
-			// Offset both the mask and the compressed value using the remainder as the offset
+			
 			ulong mask = ulong.MaxValue >> (64 - bits);
+			ulong offsetmask = mask << offset;
+			ulong offsetcomp = value << offset;
 
-			ulong offsetmask = mask << -offset;
-			ulong offsetcomp = (ulong)value << -offset;
+			buffer[index] = (byte)((buffer[index] & ~offsetmask) | (offsetcomp & offsetmask));
 
-			while (true)
+			offset = MAXBITS - offset;
+
+			// These are complete overwrites of the array element, so no masking is required
+			while (offset < (64-8))
 			{
-				// set the unwritten bits in byte[] to zero as a safety
-				buffer[index] &= (byte)~offsetmask; // set bits to zero
-				buffer[index] |= (byte)(offsetcomp & offsetmask);
-
-				if (index == endindex)
-					break;
-
-				// Push the compressed value and the mask to align with the next array element
-				offset += MAXBITS;
-				offsetmask = mask >> offset;
-				offsetcomp = (ulong)value >> offset;
 				index++;
+				offsetcomp = value >> offset;
+				buffer[index] = (byte)offsetcomp;
+				offset += MAXBITS;
 			}
 
-			if (endpos > bitposition)
-				bitposition = endpos;
+			// remaning partial write needs masking
+			if (offset != 64)
+			{
+				index++;
 
-			return;
+				offsetmask = mask >> offset;
+				offsetcomp = value >> offset;
+				buffer[index] = (byte)((buffer[index] & ~offsetmask) | (offsetcomp & offsetmask));
+			}
+			bitposition += bits;
 		}
 
 		public static void Write(this uint[] buffer, ulong value, ref int bitposition, int bits)
@@ -155,38 +265,27 @@ namespace emotitron.Compression
 
 			const int MAXBITS = 32;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS;
 			int index = bitposition >> 5;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 5);
+			
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
+			ulong offsetmask = mask << offset;
+			ulong offsetval = value << offset;
 
-			ulong offsetmask = mask << -offset;
-			ulong offsetval = (ulong)value << -offset;
+			buffer[index] = (uint)((buffer[index] & ~offsetmask) | (offsetval & offsetmask));
 
-			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 5), bufferOverrunMsg);
+			offset = MAXBITS - offset;
 
-			while (true)
+			while (offset < 64)
 			{
-				// set the unwritten bits in byte[] to zero as a safety
-				buffer[index] &= (uint)(~offsetmask); // set bits to zero
-				buffer[index] |= (uint)(offsetval & offsetmask);
-
-				if (index == endindex)
-					break;
-
-				// Push the compressed value and the mask to align with the next array element
-				offset += MAXBITS;
-				offsetmask = mask >> offset;
-				offsetval = (ulong)value >> offset;
 				index++;
+				offsetmask = mask >> offset;
+				offsetval = value >> offset;
+				buffer[index] = (uint)((buffer[index] & ~offsetmask) | (offsetval & offsetmask));
+				offset += MAXBITS;
 			}
-
-			if (endpos > bitposition)
-				bitposition = endpos;
-
-			return;
+			bitposition += bits;
 		}
 
 		public static void Write(this ulong[] buffer, ulong value, ref int bitposition, int bits)
@@ -196,37 +295,26 @@ namespace emotitron.Compression
 
 			const int MAXBITS = 64;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS;
 			int index = bitposition >> 6;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 6);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
+			ulong offsetmask = mask << offset;
+			ulong offsetval = value << offset;
 
-			ulong offsetmask = (mask << -offset);
-			ulong offsetval = (value & mask) << -offset;
+			buffer[index] = (buffer[index] & ~offsetmask) | (offsetval & offsetmask);
 
-			//System.Diagnostics.Debug.Assert((endpos <= buffer.Length << 6), bufferOverrunMsg);
+			offset = MAXBITS - offset;
 
-			while (true)
+			while (offset < 64)
 			{
-				// set the unwritten bits in byte[] to zero as a safety
-				buffer[index] &= ~offsetmask; // set bits to zero
-				buffer[index] |= (offsetval & offsetmask);
-
-				if (index == endindex)
-					break;
-
-				// Push the compressed value and the mask to align with this array element
-				offset += MAXBITS;
+				index++;
 				offsetmask = mask >> offset;
 				offsetval = value >> offset;
-				index++;
+				buffer[index] = (buffer[index] & ~offsetmask) | (offsetval & offsetmask);
+				offset += MAXBITS;
 			}
-
-			if (endpos > bitposition)
-				bitposition = endpos;
-
+			bitposition += bits;
 		}
 
 		#endregion
@@ -259,34 +347,28 @@ namespace emotitron.Compression
 		/// <returns>UInt64 read value. Cast this to the intended type.</returns>
 		public static ulong Read(this byte[] buffer, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return 0;
+
 			const int MAXBITS = 8;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 3;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 3);
 
 			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong line = ((ulong)buffer[index] >> -offset);
-			ulong value = 0;
-
-			while (true)
+			ulong value = (ulong)buffer[index] >> offset;
+			offset = MAXBITS - offset;
+			while (offset < 64)
 			{
-				value |= (line & mask);
-
-				if (index == endindex)
-					break;
-
-				offset += MAXBITS;
 				index++;
-				line = ((ulong)buffer[index] << offset);
+				value |= (ulong)buffer[index] << offset;
+				offset += MAXBITS;
 			}
 
-			bitposition = bitposition + bits;
-			return value;
-
+			bitposition += bits;
+			return value & mask;
 		}
 
 		/// <summary>
@@ -298,33 +380,27 @@ namespace emotitron.Compression
 		/// <returns>UInt64 read value. Cast this to the intended type.</returns>
 		public static ulong Read(this uint[] buffer, ref int bitposition, int bits)
 		{
+			if (bits == 0)
+				return 0;
+
 			const int MAXBITS = 32;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 5;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 5);
 
 			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong line = ((ulong)buffer[index] >> -offset);
-			ulong value = 0;
-
-			while (true)
+			ulong value = (ulong)buffer[index] >> offset;
+			offset = MAXBITS - offset;
+			while (offset < 64)
 			{
-				value |= (line & mask);
-
-				if (index == endindex)
-					break;
-
-				offset += MAXBITS;
 				index++;
-				line = ((ulong)buffer[index] << offset);
+				value |= (ulong)buffer[index] << offset;
+				offset += MAXBITS;
 			}
-
-			bitposition = bitposition + bits;
-			return value;
+			bitposition += bits;
+			return value & mask;
 		}
 
 		/// <summary>
@@ -341,31 +417,23 @@ namespace emotitron.Compression
 
 			const int MAXBITS = 64;
 			const int MODULUS = MAXBITS - 1;
-			int offset = -(bitposition & MODULUS); // this is just a modulus
+			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 6;
-			int endpos = bitposition + bits;
-			int endindex = ((endpos - 1) >> 6);
 
 			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong line = ((ulong)buffer[index] >> -offset);
-			ulong value = 0;
-
-			while (true)
+			ulong value = (ulong)buffer[index] >> offset;
+			offset = MAXBITS - offset;
+			while (offset < 64)
 			{
-				value |= (line & mask);
-
-				if (index == endindex)
-					break;
-
-				offset += MAXBITS;
 				index++;
-				line = ((ulong)buffer[index] << offset);
+				value |= (ulong)buffer[index] << offset;
+				offset += MAXBITS;
 			}
 
-			bitposition = bitposition + bits;
-			return value;
+			bitposition += bits;
+			return value & mask;
 		}
 
 		#endregion
