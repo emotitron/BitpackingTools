@@ -102,7 +102,7 @@ public unsafe void WritePackedBits()
 	buffer.WriteSignedPackedBits(int.MinValue, ref writepos, 32);
 	buffer.WritePackedBits(ulong.MaxValue, ref writepos, 64);
 
-		holdpos = readpos;
+	holdpos = readpos;
 	int restored1 = buffer.ReadSignedPackedBits(ref readpos, 32);
 	Debug.Log("ZERO = " + restored1 + " with " + (readpos - holdpos) + " written bits");
 
