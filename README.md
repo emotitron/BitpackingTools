@@ -3,6 +3,9 @@ Bitpacking/serialization libraries used interally for Unity Store <a href="https
 
 If you find these tools useful and would like to contribute, my paypal is davincarten@yahoo.com.
 
+To make these extensions accessible add:
+```using emotitron.Compression;```
+
 ## Primary Methods:
 ### Write
 ```cs
@@ -49,8 +52,6 @@ Injects x `least signifigant `bits`` of the ``value`` into the ``buffer`` at the
 
 
 
-To make these extensions accessible add:
-```using emotitron.Compression;```
 
 ## ArraySerializeExt class
 
