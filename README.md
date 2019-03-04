@@ -28,7 +28,7 @@ Writes the least significant ``bits`` of the ``value`` into the ``buffer`` start
 ```cs
 buffer.Append(value, ref int bitposition, int bits)
 ```
-Similar to Write, this method Appends the least significant ``bits`` of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. However, xxisting data past the bitposition is not preserved to increase the write speed. Use only for sequential writes, and use Write() and Inject() for non-linear insertions.
+Similar to Write, this method Appends the least significant ``bits`` of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. However, existing data past the bitposition is not preserved to increase the write speed. Use only for sequential writes, and use Write() and Inject() for non-linear insertions.
 
 ### Add
 ```cs
@@ -74,7 +74,7 @@ public unsafe void SafeArrayWrites()
 }
 ```
 ### Advanced Usage (Unsafe)
-For sequential writes and reads of a byte[] or uint[] arrays, there are unsafe methods that internally treat these arrays as a ulong[], resulting in up to 4x faster reads and writes. These are all contained in ArraySerializerUnsafe.cs, which can be deleted for projects where you don't want to enable Allow Unsafe Code.
+For sequential writes and reads of a byte[] or uint[] arrays, there are unsafe methods that internally treat these arrays as a ulong[], resulting in up to 4x faster reads and writes. 
 ```cs
 public unsafe void UnsafeArrayWrites()
 {
@@ -178,7 +178,7 @@ MAX = 18446744073709551615 with 71 written bits
 For 32 bits of variable size, there is a 6 bit sizer added, making this less than ideal if the values will be large. However if the values often stay closer to zero, this can save quite a bit of space. Note that a value of zero only took 6 bits, and a value of -100 only took 14 bits.
 
 ### PackedBits
-Values serialized using ``WritePackedBits()`` are checked for the position of the highest used signifigant bit. All zero bits on the left of the value are not serialized, and the value is preceded by a write of several bits for size info.
+Values serialized using ``WritePackedBits()`` are checked for the position of the highest used significant bit. All zero bits on the left of the value are not serialized, and the value is preceded by a write of several bits for size info.
 
 | sizer | bits | break even  |
 |-------|------|-------------|
