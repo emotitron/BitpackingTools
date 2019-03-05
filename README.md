@@ -31,7 +31,7 @@ Writes the least significant ``bits`` of the ``value`` into the ``buffer`` start
 ```cs
 buffer.Append(value, ref int bitposition, int bits)
 ```
-Similar to Write, this method Appends the least significant ``bits`` of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. However, existing data past the bitposition is not preserved to increase the write speed. Use only for sequential writes, and use Write() and Inject() for non-linear insertions.
+Similar to _Write()_, this method Appends the least significant ``bits`` of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. However, existing data past the bitposition is not preserved to increase the write speed. Use only for sequential writes, and use Write() and Inject() for non-linear insertions.
 
 ### Add
 ```cs
@@ -44,15 +44,13 @@ Appends the least significant ''bits'' of the ``value`` to the ``buffer`` starti
 ```cs
 value = buffer.Peek(int bitposition, int bits)
 ```
-Returns a restored ``value`` by reading x ``bits`` from the ``buffer``starting at ``bitposition``. The ``bitposition`` is not incremented with Peek.
+Similar to _Read()_, returns a restored ``value`` by reading x ``bits`` from the ``buffer``starting at ``bitposition``. The ``bitposition`` is not incremented with Peek.
 
 ### Poke
 ```cs
 value.Poke(buffer, int bitposition, int bits)
 ```
-Injects x least signifigant ``bits`` of the ``value`` into the ``buffer`` at the ``bitposition``. The ``bitposition`` is not incremented with Poke.
-
-
+Similar to _Inject()_, writes x least signifigant ``bits`` of the ``value`` into the ``buffer`` at the ``bitposition``. The ``bitposition`` is not incremented with Poke.
 
 
 ## ArraySerializeExt class
