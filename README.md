@@ -15,9 +15,9 @@ Writes the least significant ``bits`` of the ``value`` into the ``buffer`` start
 
 ### Read
 ```cs
-buffer.Read(ref int bitposition, int bits)
+value = buffer.Read(ref int bitposition, int bits)
 ```
-Returns x ``bits`` from read from the ``buffer``starting at ``bitposition``. The ``bitposition`` is incremented by ``bits``.
+Returns a restored ``value`` by reading x ``bits`` from the ``buffer``starting at ``bitposition``. The ``bitposition`` is incremented by ``bits``.
 
 ## Alternative Methods
 ### Inject
@@ -42,15 +42,15 @@ Appends the least significant ''bits'' of the ``value`` to the ``buffer`` starti
 
 ### Peek
 ```cs
-buffer.Peek(int bitposition, int bits)
+value = buffer.Peek(int bitposition, int bits)
 ```
-Returns x ``bits`` from read from the ``buffer``starting at ``bitposition``. The ``bitposition`` is not incremented.
+Returns a restored ``value`` by reading x ``bits`` from the ``buffer``starting at ``bitposition``. The ``bitposition`` is not incremented with Peek.
 
 ### Poke
 ```cs
 value.Poke(buffer, int bitposition, int bits)
 ```
-Injects x least signifigant ``bits`` of the ``value`` into the ``buffer`` at the ``bitposition``. The ``bitposition`` is not incremented.
+Injects x least signifigant ``bits`` of the ``value`` into the ``buffer`` at the ``bitposition``. The ``bitposition`` is not incremented with Poke.
 
 
 
