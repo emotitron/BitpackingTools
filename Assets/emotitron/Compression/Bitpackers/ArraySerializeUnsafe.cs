@@ -257,7 +257,7 @@ namespace emotitron.Compression
 
 			offset = MAXBITS - offset;
 
-			if (offset < 64)
+			if (offset < bits)
 			{
 				offsetmask = mask >> offset;
 				offsetcomp = value >> offset;

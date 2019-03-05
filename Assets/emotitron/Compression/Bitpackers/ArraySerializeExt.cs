@@ -128,7 +128,7 @@ namespace emotitron.Compression
 			buffer[index] = (byte)result;
 
 			offset = MAXBITS - offset;
-			while (offset < 64)
+			while (offset < bits)
 			{
 				index++;
 				buffer[index] = (byte)((value >> offset));
@@ -155,7 +155,7 @@ namespace emotitron.Compression
 			buffer[index] = (uint)result;
 
 			offset = MAXBITS - offset;
-			while (offset < 64)
+			while (offset < bits)
 			{
 				index++;
 				buffer[index] = (uint)((value >> offset));
@@ -238,7 +238,7 @@ namespace emotitron.Compression
 			offset = MAXBITS - offset;
 
 			// These are complete overwrites of the array element, so no masking is required
-			while (offset < (64-8))
+			while (offset < (bits-8))
 			{
 				index++;
 				offsetcomp = value >> offset;
@@ -247,7 +247,7 @@ namespace emotitron.Compression
 			}
 
 			// remaning partial write needs masking
-			if (offset != 64)
+			if (offset != bits)
 			{
 				index++;
 
@@ -277,7 +277,7 @@ namespace emotitron.Compression
 
 			offset = MAXBITS - offset;
 
-			while (offset < 64)
+			while (offset < bits)
 			{
 				index++;
 				offsetmask = mask >> offset;
@@ -306,7 +306,7 @@ namespace emotitron.Compression
 
 			offset = MAXBITS - offset;
 
-			while (offset < 64)
+			while (offset < bits)
 			{
 				index++;
 				offsetmask = mask >> offset;
@@ -360,7 +360,7 @@ namespace emotitron.Compression
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong value = (ulong)buffer[index] >> offset;
 			offset = MAXBITS - offset;
-			while (offset < 64)
+			while (offset < bits)
 			{
 				index++;
 				value |= (ulong)buffer[index] << offset;
@@ -393,7 +393,7 @@ namespace emotitron.Compression
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong value = (ulong)buffer[index] >> offset;
 			offset = MAXBITS - offset;
-			while (offset < 64)
+			while (offset < bits)
 			{
 				index++;
 				value |= (ulong)buffer[index] << offset;
@@ -425,7 +425,7 @@ namespace emotitron.Compression
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong value = (ulong)buffer[index] >> offset;
 			offset = MAXBITS - offset;
-			while (offset < 64)
+			while (offset < bits)
 			{
 				index++;
 				value |= (ulong)buffer[index] << offset;
