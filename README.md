@@ -20,10 +20,10 @@ Some examples of packed values:
 |Selected Weapon |1-12     |4     |0-15      |
 |Team            |0-4      |3     |0-7       |
 
-The ArraySerialize extensions allow you to read/write directly to byte[] uint[] and ulong[] arrays without needing to wrap them in a Bitstream/Bitbuffer/Bitwriter. Unsafe options for arrays are included that allow you to pin an array prior to multiple read/write operations, which treats byte[] and uint[] as a ulong[] - allowing much faster reads/writes, especially for values >16 bits in length.
 
-The Primitive serializer allow you to write bits to and from primitives (like ulong and uint). Useful for selectively packing multiple fields into one variable, for uses such as RPCs and Commands, and Syncvars.
+The **ArraySerialize** extensions allow you to read/write directly to byte[] uint[] and ulong[] arrays without needing to wrap them in a Bitstream/Bitbuffer/Bitwriter. Unsafe options for arrays are included that allow you to pin an array prior to multiple read/write operations, which treats byte[] and uint[] as a ulong[] - allowing much faster reads/writes, especially for values >16 bits in length.
 
+The **PrimitiveSerialize** extensions allow you to write bits to and from primitives (like ulong and uint). Useful for selectively packing multiple fields into one variable, for RPCs and Commands, and Syncvars.
 
 ## Primary Methods:
 ### Write
