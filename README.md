@@ -6,6 +6,25 @@ If you find these tools useful and would like to contribute, my paypal is davinc
 To make these extensions accessible add:
 ```using emotitron.Compression;```
 
+## Summary
+Bitpacking allows writing of values using only the number of bits needed, sequentially into a buffer. They are read out in the same order they were read in, and restored to their original type. 
+
+Some examples of packed values:
+
+|Value           |Range    |Bits  |Bit Range |
+|----------------|---------|------|----------|
+|Health          |0-100    |7     |0-127     |
+|Armor           |0-250    |8     |0-255     |
+|IsAlive         |0-1      |1     |0-1       |
+|IsStunned       |0-1      |1     |0-1       |
+|Selected Weapon |1-12     |4     |0-15      |
+|Team            |0-4      |3     |0-7       |
+
+The ArraySerialize extensions allow you to read/write directly to byte[] uint[] and ulong[] arrays without needing to wrap them in a Bitstream/Bitbuffer/Bitwriter. Unsafe options for arrays are included that allow you to pin an array prior to multiple read/write operations, which treats byte[] and uint[] as a ulong[] - allowing much faster reads/writes, especially for values >16 bits in length.
+
+The Primitive serializer allow you to write bits to and from primitives (like ulong and uint). Useful for selectively packing multiple fields into one variable, for uses such as RPCs and Commands, and Syncvars.
+
+
 ## Primary Methods:
 ### Write
 ```cs
@@ -200,4 +219,3 @@ PackedBytes work in a similar way to PackedBits, except rather than counting bit
 
 ### SignedPackedBits / SignedPackedBytes
 Signed types (int, short and sbyte) are automatically zigzagged to move the sign bit from the msb position to the lsb position, keeping the pattern of "closer to zero, the smaller the write" true for negative numbers.
-
