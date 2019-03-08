@@ -1,6 +1,9 @@
 {
     "name": "Bitpackers",
-    "references": [],
+    "references": [
+        "HalfFloat",
+        "Utilities"
+    ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
