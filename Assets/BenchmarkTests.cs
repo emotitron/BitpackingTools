@@ -12,16 +12,10 @@ public class BenchmarkTests : MonoBehaviour
 	public static ulong[] ubuffer = new ulong[128];
 	public static ulong[] ubuffer2 = new ulong[128];
 
-	//[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-	//static void Test()
-	//{
-	//	TestAsArray();
-
-	//	ArrayCopy();
-	//}
-
+	
 	private void Start()
 	{
+		
 		TestWriterIntegrity();
 
 		ArrayCopy();

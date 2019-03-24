@@ -36,6 +36,130 @@ namespace emotitron.Compression
 	{
 		private const string bufferOverrunMsg = "Byte buffer overrun. Dataloss will occur.";
 
+		#region Zero
+
+		// byte[]
+		/// <summary>
+		/// Zero out all array values. Start and End values are inclusive.
+		/// </summary>
+		public static void Zero(this byte[] buffer, int startByte, int endByte)
+		{
+			for (int i = startByte; i <= endByte; ++i)
+				buffer[i] = 0;
+		}
+
+		/// <summary>
+		/// Zero out all array values. Start value is inclusive.
+		/// </summary>
+		public static void Zero(this byte[] buffer, int startByte)
+		{
+			int cnt = buffer.Length;
+			for (int i = startByte; i < cnt; ++i)
+				buffer[i] = 0;
+		}
+
+		/// <summary>
+		/// Zero out all array values.
+		/// </summary>
+		public static void Zero(this byte[] buffer)
+		{
+			int cnt = buffer.Length;
+			for (int i = 0; i < cnt; ++i)
+				buffer[i] = 0;
+		}
+
+		// ushort[]
+		/// <summary>
+		/// Zero out all array values. Start and End values are inclusive.
+		/// </summary>
+		public static void Zero(this ushort[] buffer, int startByte, int endByte)
+		{
+			for (int i = startByte; i <= endByte; ++i)
+				buffer[i] = 0;
+		}
+
+		/// <summary>
+		/// Zero out all array values. Start value is inclusive.
+		/// </summary>
+		public static void Zero(this ushort[] buffer, int startByte)
+		{
+			int cnt = buffer.Length;
+			for (int i = startByte; i < cnt; ++i)
+				buffer[i] = 0;
+		}
+
+		/// <summary>
+		/// Zero out all array values.
+		/// </summary>
+		public static void Zero(this ushort[] buffer)
+		{
+			int cnt = buffer.Length;
+			for (int i = 0; i < cnt; ++i)
+				buffer[i] = 0;
+		}
+
+		// uint[]
+		/// <summary>
+		/// Zero out all array values. Start and End values are inclusive.
+		/// </summary>
+		public static void Zero(this uint[] buffer, int startByte, int endByte)
+		{
+			for (int i = startByte; i <= endByte; ++i)
+				buffer[i] = 0;
+		}
+
+		/// <summary>
+		/// Zero out all array values. Start value is inclusive.
+		/// </summary>
+		public static void Zero(this uint[] buffer, int startByte)
+		{
+			int cnt = buffer.Length;
+			for (int i = startByte; i < cnt; ++i)
+				buffer[i] = 0;
+		}
+
+		/// <summary>
+		/// Zero out all array values.
+		/// </summary>
+		public static void Zero(this uint[] buffer)
+		{
+			int cnt = buffer.Length;
+			for (int i = 0; i < cnt; ++i)
+				buffer[i] = 0;
+		}
+
+		// ulong[]
+		/// <summary>
+		/// Zero out all array values. Start and End values are inclusive.
+		/// </summary>
+		public static void Zero(this ulong[] buffer, int startByte, int endByte)
+		{
+			for (int i = startByte; i <= endByte; ++i)
+				buffer[i] = 0;
+		}
+
+		/// <summary>
+		/// Zero out all array values. Start value is inclusive.
+		/// </summary>
+		public static void Zero(this ulong[] buffer, int startByte)
+		{
+			int cnt = buffer.Length;
+			for (int i = startByte; i < cnt; ++i)
+				buffer[i] = 0;
+		}
+
+		/// <summary>
+		/// Zero out all array values.
+		/// </summary>
+		public static void Zero(this ulong[] buffer)
+		{
+			int cnt = buffer.Length;
+			for (int i = 0; i < cnt; ++i)
+				buffer[i] = 0;
+		}
+
+		#endregion
+
 		#region Read/Write Signed Value
 
 		public static void WriteSigned(this byte[] buffer, int value, ref int bitposition, int bits)
@@ -51,6 +175,22 @@ namespace emotitron.Compression
 		public static void WriteSigned(this ulong[] buffer, int value, ref int bitposition, int bits)
 		{
 			uint zigzag = (uint)((value << 1) ^ (value >> 31));
+			buffer.Write(zigzag, ref bitposition, bits);
+		}
+
+		public static void WriteSigned(this byte[] buffer, long value, ref int bitposition, int bits)
+		{
+			ulong zigzag = (ulong)((value << 1) ^ (value >> 63));
+			buffer.Write(zigzag, ref bitposition, bits);
+		}
+		public static void WriteSigned(this uint[] buffer, long value, ref int bitposition, int bits)
+		{
+			ulong zigzag = (ulong)((value << 1) ^ (value >> 63));
+			buffer.Write(zigzag, ref bitposition, bits);
+		}
+		public static void WriteSigned(this ulong[] buffer, long value, ref int bitposition, int bits)
+		{
+			ulong zigzag = (ulong)((value << 1) ^ (value >> 63));
 			buffer.Write(zigzag, ref bitposition, bits);
 		}
 
@@ -70,6 +210,25 @@ namespace emotitron.Compression
 		{
 			uint value = (uint)buffer.Read(ref bitposition, bits);
 			int zagzig = (int)((value >> 1) ^ (-(int)(value & 1)));
+			return zagzig;
+		}
+
+		public static long ReadSigned64(this byte[] buffer, ref int bitposition, int bits)
+		{
+			ulong value = buffer.Read(ref bitposition, bits);
+			long zagzig = ((long)(value >> 1) ^ (-(long)(value & 1)));
+			return zagzig;
+		}
+		public static long ReadSigned64(this uint[] buffer, ref int bitposition, int bits)
+		{
+			ulong value = buffer.Read(ref bitposition, bits);
+			long zagzig = ((long)(value >> 1) ^ (-(long)(value & 1)));
+			return zagzig;
+		}
+		public static long ReadSigned64(this ulong[] buffer, ref int bitposition, int bits)
+		{
+			ulong value = buffer.Read(ref bitposition, bits);
+			long zagzig = ((long)(value >> 1) ^ (-(long)(value & 1)));
 			return zagzig;
 		}
 
