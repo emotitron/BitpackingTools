@@ -23,6 +23,8 @@
 */
 
 using System;
+using emotitron.Compression.HalfFloat;
+using emotitron.Compression.Utilities;
 
 namespace emotitron.Compression
 {

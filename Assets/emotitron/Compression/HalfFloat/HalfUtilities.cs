@@ -22,7 +22,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace emotitron.Compression
+namespace emotitron.Compression.HalfFloat
 {
 	public static class HalfUtilities
 	{

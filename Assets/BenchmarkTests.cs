@@ -238,7 +238,7 @@ public class BenchmarkTests : MonoBehaviour
 		Debug.Log("Uneven Bitpack byte: time=" + watch.ElapsedMilliseconds + " ms");
 	}
 
-	static float interval = 0;
+	//static float interval = 0;
 
 	//void Update()
 	//{

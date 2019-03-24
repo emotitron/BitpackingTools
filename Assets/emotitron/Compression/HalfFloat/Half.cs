@@ -25,7 +25,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 //using System.ComponentModel;
 
-namespace emotitron.Compression
+namespace emotitron.Compression.HalfFloat
 {
 	/// <summary>
 	/// A half precision (16 bit) floating point value.

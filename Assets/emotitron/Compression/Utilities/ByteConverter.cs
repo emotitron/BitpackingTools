@@ -27,7 +27,7 @@
 using System.Runtime.InteropServices;
 using System;
 
-namespace emotitron.Compression
+namespace emotitron.Compression.Utilities
 {
 
 	[StructLayout(LayoutKind.Explicit)]
