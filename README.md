@@ -156,6 +156,16 @@ An alternative to Write() is Inject(), which has the value being written as the 
 	999.InjectUnsigned(ref myBuffer, ref writepos, 10);
 }
  ```
+## Bitpacking Signed Values
+Signed integer values (long, int, short and sbyte) all use the upper bit for the sign value. This is problematic for bitpacking since bitpacking trims off all of the unused bits on the left of values. To solve this a method called ZigZag can be employed, which simply moves the sign to the rightmost bit, and nudges all of the value bits to the left one position.
+
+You can manually zigzag values prior to bitpacking and use the normal Write(), Append(), and Read() methods:
+```cs
+int original = -747;
+uint shifted = original.ZigZag();
+int restored = shifted.UnZigZag();
+```
+Or you can make use of the WriteSigned(), ReadSigned() methods that automatically handle the zigzagging.
 
 ## PackedBits and PackedBytes
 For fields that have large potential ranges, but have values that hover at or near zero there are PackedBits and PackedBytes serialization options.
