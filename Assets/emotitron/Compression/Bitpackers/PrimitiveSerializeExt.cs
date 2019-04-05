@@ -23,8 +23,8 @@
 */
 
 using System;
-using emotitron.Compression.HalfFloat;
-using emotitron.Compression.Utilities;
+//using emotitron.Compression.HalfFloat;
+//using emotitron.Compression.Utilities;
 
 namespace emotitron.Compression
 {
@@ -44,7 +44,7 @@ namespace emotitron.Compression
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
 		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ByteConverter value, ref ulong buffer, ref int bitposition, int bits)
+		public static void Inject(this Utilities.ByteConverter value, ref ulong buffer, ref int bitposition, int bits)
 		{
 			((ulong)value).Inject(ref buffer, ref bitposition, bits);
 		}
@@ -55,7 +55,7 @@ namespace emotitron.Compression
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
 		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ByteConverter value, ref uint buffer, ref int bitposition, int bits)
+		public static void Inject(this Utilities.ByteConverter value, ref uint buffer, ref int bitposition, int bits)
 		{
 			((ulong)value).Inject(ref buffer, ref bitposition, bits);
 		}
@@ -66,7 +66,7 @@ namespace emotitron.Compression
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
 		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ByteConverter value, ref ushort buffer, ref int bitposition, int bits)
+		public static void Inject(this Utilities.ByteConverter value, ref ushort buffer, ref int bitposition, int bits)
 		{
 			((ulong)value).Inject(ref buffer, ref bitposition, bits);
 		}
@@ -77,7 +77,7 @@ namespace emotitron.Compression
 		/// <param name="buffer">Target of write.</param>
 		/// <param name="bitposition">Auto-incremented write position. Writing will begin at this position in the buffer, and this value will have bits added to it.</param>
 		/// <param name="bits">Number of lower order bits to copy from source to target buffer.</param>
-		public static void Inject(this ByteConverter value, ref byte buffer, ref int bitposition, int bits)
+		public static void Inject(this Utilities.ByteConverter value, ref byte buffer, ref int bitposition, int bits)
 		{
 			((ulong)value).Inject(ref buffer, ref bitposition, bits);
 		}
@@ -1135,7 +1135,7 @@ namespace emotitron.Compression
 		/// <param name="bitposition">Auto-incremented read position for the buffer (in bits)</param>
 		public static void Inject(this float f, ref ulong buffer, ref int bitposition)
 		{
-			buffer = Write(buffer, ((ulong)(ByteConverter)f), ref bitposition, 32);
+			buffer = Write(buffer, ((ulong)(Utilities.ByteConverter)f), ref bitposition, 32);
 		}
 
 		/// <summary>
@@ -1146,12 +1146,12 @@ namespace emotitron.Compression
 		/// <returns></returns>
 		public static float ReadFloat(this ulong buffer, ref int bitposition)
 		{
-			return (ByteConverter)Read(buffer, ref bitposition, 32);
+			return (Utilities.ByteConverter)Read(buffer, ref bitposition, 32);
 		}
 		[System.Obsolete("Use Read instead.")]
 		public static float ExtractFloat(this ulong buffer, ref int bitposition)
 		{
-			return (ByteConverter)Extract(buffer, ref bitposition, 32);
+			return (Utilities.ByteConverter)Extract(buffer, ref bitposition, 32);
 		}
 
 		#endregion
@@ -1166,7 +1166,7 @@ namespace emotitron.Compression
 		/// <param name="bitposition">Auto-incremented read position for the buffer (in bits)</param>
 		public static ushort InjectAsHalfFloat(this float f, ref ulong buffer, ref int bitposition)
 		{
-			ushort c = HalfUtilities.Pack(f);
+			ushort c = HalfFloat.HalfUtilities.Pack(f);
 			buffer = Write(buffer, c, ref bitposition, 16);
 			return c;
 		}
@@ -1178,7 +1178,7 @@ namespace emotitron.Compression
 		/// <param name="bitposition">Auto-incremented read position for the buffer (in bits)</param>
 		public static ushort InjectAsHalfFloat(this float f, ref uint buffer, ref int bitposition)
 		{
-			ushort c = HalfUtilities.Pack(f);
+			ushort c = HalfFloat.HalfUtilities.Pack(f);
 			buffer = Write(buffer, c, ref bitposition, 16);
 			return c;
 		}
@@ -1192,13 +1192,13 @@ namespace emotitron.Compression
 		public static float ReadHalfFloat(this ulong buffer, ref int bitposition)
 		{
 			ushort c = (ushort)Read(buffer, ref bitposition, 16);
-			return HalfUtilities.Unpack(c);
+			return HalfFloat.HalfUtilities.Unpack(c);
 		}
 		[System.Obsolete("Use Read instead.")]
 		public static float ExtractHalfFloat(this ulong buffer, ref int bitposition)
 		{
 			ushort c = (ushort)Extract(buffer, ref bitposition, 16);
-			return HalfUtilities.Unpack(c);
+			return HalfFloat.HalfUtilities.Unpack(c);
 		}
 		/// <summary>
 		/// Read a float from a bitpacked primitive(value) starting at bitposition.
@@ -1209,13 +1209,13 @@ namespace emotitron.Compression
 		public static float ReadHalfFloat(this uint buffer, ref int bitposition)
 		{
 			ushort c = (ushort)Read(buffer, ref bitposition, 16);
-			return HalfUtilities.Unpack(c);
+			return HalfFloat.HalfUtilities.Unpack(c);
 		}
 		[System.Obsolete("Use Read instead.")]
 		public static float ExtractHalfFloat(this uint buffer, ref int bitposition)
 		{
 			ushort c = (ushort)Extract(buffer, ref bitposition, 16);
-			return HalfUtilities.Unpack(c);
+			return HalfFloat.HalfUtilities.Unpack(c);
 		}
 
 		#endregion

@@ -26,7 +26,7 @@
 #define UNITY_ASSERTIONS
 #endif
 
-using emotitron.Compression.Utilities;
+//using emotitron.Compression.Utilities;
 
 namespace emotitron.Compression
 {
@@ -246,7 +246,7 @@ namespace emotitron.Compression
 		/// <param name="bitposition">The bit position in the array we start the read at. Will be incremented by 32 bits.</param>
 		public static void WriteFloat(this byte[] buffer, float value, ref int bitposition)
 		{
-			Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
+			Write(buffer, ((Utilities.ByteConverter)value).uint32, ref bitposition, 32);
 		}
 
 		/// <summary>
@@ -256,7 +256,7 @@ namespace emotitron.Compression
 		/// <param name="bitposition">The bit position in the array we start the read at. Will be incremented by 32 bits.</param>
 		public static float ReadFloat(this byte[] buffer, ref int bitposition)
 		{
-			return ((ByteConverter)Read(buffer, ref bitposition, 32));
+			return ((Utilities.ByteConverter)Read(buffer, ref bitposition, 32));
 		}
 
 		#endregion
@@ -924,7 +924,7 @@ namespace emotitron.Compression
 		[System.Obsolete("Argument order has changed.")]
 		public static byte[] Write(this byte[] buffer, float value, ref int bitposition)
 		{
-			Write(buffer, ((ByteConverter)value).uint32, ref bitposition, 32);
+			Write(buffer, ((Utilities.ByteConverter)value).uint32, ref bitposition, 32);
 			return buffer;
 		}
 		[System.Obsolete("Argument order has changed.")]
