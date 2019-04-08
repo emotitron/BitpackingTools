@@ -1,11 +1,18 @@
 ![Header](https://github.com/emotitron/NetworkSyncTransform/blob/master/Docs/img/BT_DocumentHeader.jpg?raw=true)
 # BitpackingTools
-Bitpacking/serialization libraries used interally for Unity Store <a href="https://assetstore.unity.com/packages/tools/network/network-sync-transform-nst-98453">NetworkSyncTransform</a> and <a href="https://assetstore.unity.com/packages/tools/network/transform-crusher-free-version-117313">TransformCrusher</a> Assets.
+Bitpacking/serialization libraries used interally for my Unity assets <a href="https://github.com/emotitron/NetworkSyncTransform">NetworkSyncTransform</a> and <a href="https://github.com/emotitron/TransformCrusher">TransformCrusher</a>.
 
-If you find these tools useful and would like to contribute, my paypal is davincarten@yahoo.com.
+If you find these tools useful and would like to contribute to my continued support and sharing:
 
-To make these extensions accessible add:
+[![Paypal Donations](https://raw.githubusercontent.com/emotitron/NetworkSyncTransform/master/Docs/img/paypaldonate.png)](https://paypal.me/emotitron?locale.x=en_US)
+
+## Setup
+Add the files in ``Assets/Emotitron`` to your project.
+Add the following to the top of your scripts:
+
 ```using emotitron.Compression;```
+
+You also may need to enable ``'Allow Unsafe'`` in PlayerSettings, if the asmdef's don't do the trick automatically.
 
 ## Summary
 Bitpacking allows writing of values using only the number of bits needed, sequentially into a buffer. They are read out in the same order they were read in, and restored to their original type. 
@@ -25,6 +32,7 @@ Some examples of packed values:
 The **ArraySerialize** extensions allow you to read/write directly to byte[] uint[] and ulong[] arrays without needing to wrap them in a Bitstream/Bitbuffer/Bitwriter. Unsafe options for arrays are included that allow you to pin an array prior to multiple read/write operations, which treats byte[] and uint[] as a ulong[] - allowing much faster reads/writes, especially for values >16 bits in length.
 
 The **PrimitiveSerialize** extensions allow you to write bits to and from primitives (like ulong and uint). Useful for selectively packing multiple fields into one variable, for RPCs and Commands, and Syncvars.
+
 
 ## Primary Methods:
 ### Write
@@ -230,3 +238,11 @@ PackedBytes work in a similar way to PackedBits, except rather than counting bit
 
 ### SignedPackedBits / SignedPackedBytes
 Signed types (int, short and sbyte) are automatically zigzagged to move the sign bit from the msb position to the lsb position, keeping the pattern of "closer to zero, the smaller the write" true for negative numbers.
+
+## Contact
+<davincarten@gmail.com>
+
+## Donate
+[![Paypal Donations](https://raw.githubusercontent.com/emotitron/NetworkSyncTransform/master/Docs/img/paypaldonate.png)](https://paypal.me/emotitron?locale.x=en_US)
+
+[Paypal donations](https://paypal.me/emotitron?locale.x=en_US) are always welcome!
