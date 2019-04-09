@@ -42,6 +42,7 @@ public class BenchmarkTests : MonoBehaviour
 			ubuffer.WriteSigned(val, ref wpos, size);
 			ubuffer.WriteSigned(val, ref wpos, size);
 			ubuffer.WriteSigned(val, ref wpos, size);
+
 			if (ubuffer.ReadSigned(ref rpos, size) != val)
 				Debug.Log("Error writing " + val + " to pos " + holdpos + " with size " + size);
 			if (ubuffer.ReadSigned(ref rpos, size) != val)
@@ -54,6 +55,7 @@ public class BenchmarkTests : MonoBehaviour
 			ubuffer.Write(val2, ref wpos, size);
 			ubuffer.Write(val2, ref wpos, size);
 			ubuffer.Write(val2, ref wpos, size);
+
 			if (ubuffer.Read(ref rpos, size) != val2)
 				Debug.Log("Error writing " + val2 + " to pos " + holdpos + " with size " + size);
 			if (ubuffer.Read(ref rpos, size) != val2)
