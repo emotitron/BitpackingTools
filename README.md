@@ -1,6 +1,9 @@
 ![Header](https://github.com/emotitron/NetworkSyncTransform/blob/master/Docs/img/BT_DocumentHeader.jpg?raw=true)
 # BitpackingTools
-Bitpacking/serialization libraries used interally for my Unity assets <a href="https://github.com/emotitron/NetworkSyncTransform">NetworkSyncTransform</a> and <a href="https://github.com/emotitron/TransformCrusher">TransformCrusher</a>.
+Bitpacking/serialization libraries used interally for my Unity assets 
+[Simple Network Sync](https://assetstore.unity.com/packages/tools/network/simple-network-sync-134256), 
+[Network Sync Transform](https://github.com/emotitron/NetworkSyncTransform), and 
+[Transform Crusher](https://github.com/emotitron/TransformCrusher).
 
 If you find these tools useful and would like to contribute to my continued support and sharing:
 
