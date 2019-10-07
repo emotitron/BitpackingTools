@@ -75,7 +75,7 @@ namespace emotitron.Compression
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write Method.
 		/// </summary>
-		public static void WritePackedBytes(this uint[] buffer, uint value, ref int bitposition, int bits)
+		public static void WritePackedBytes(this uint[] buffer, ulong value, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -93,7 +93,7 @@ namespace emotitron.Compression
 		/// <summary>
 		/// EXPERIMENTAL: Primary Write Method.
 		/// </summary>
-		public static void WritePackedBytes(this byte[] buffer, uint value, ref int bitposition, int bits)
+		public static void WritePackedBytes(this byte[] buffer, ulong value, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return;
@@ -116,7 +116,7 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Primary UNSAFE Reader for PackedBytes.
 		/// </summary>
-		public unsafe static uint ReadPackedBytes(ulong* uPtr, ref int bitposition, int bits)
+		public unsafe static ulong ReadPackedBytes(ulong* uPtr, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return 0;
@@ -124,12 +124,12 @@ namespace emotitron.Compression
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
 			int valuebits = (int)ArraySerializeUnsafe.Read(uPtr, ref bitposition, sizebits) << 3;
-			return (uint)ArraySerializeUnsafe.Read(uPtr, ref bitposition, valuebits);
+			return ArraySerializeUnsafe.Read(uPtr, ref bitposition, valuebits);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBytes.
 		/// </summary>
-		public static uint ReadPackedBytes(this ulong[] buffer, ref int bitposition, int bits)
+		public static ulong ReadPackedBytes(this ulong[] buffer, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return 0;
@@ -137,12 +137,12 @@ namespace emotitron.Compression
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
 			int valuebits = (int)buffer.Read(ref bitposition, sizebits) << 3;
-			return (uint)buffer.Read(ref bitposition, valuebits);
+			return buffer.Read(ref bitposition, valuebits);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBytes.
 		/// </summary>
-		public static uint ReadPackedBytes(this uint[] buffer, ref int bitposition, int bits)
+		public static ulong ReadPackedBytes(this uint[] buffer, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return 0;
@@ -150,12 +150,12 @@ namespace emotitron.Compression
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
 			int valuebits = (int)buffer.Read(ref bitposition, sizebits) << 3;
-			return (uint)buffer.Read(ref bitposition, valuebits);
+			return buffer.Read(ref bitposition, valuebits);
 		}
 		/// <summary>
 		/// Primary Reader for PackedBytes.
 		/// </summary>
-		public static uint ReadPackedBytes(this byte[] buffer, ref int bitposition, int bits)
+		public static ulong ReadPackedBytes(this byte[] buffer, ref int bitposition, int bits)
 		{
 			if (bits == 0)
 				return 0;
@@ -163,7 +163,7 @@ namespace emotitron.Compression
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
 			int valuebits = (int)buffer.Read(ref bitposition, sizebits) << 3;
-			return (uint)buffer.Read(ref bitposition, valuebits);
+			return buffer.Read(ref bitposition, valuebits);
 		}
 
 		#endregion
