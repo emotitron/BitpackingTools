@@ -3,7 +3,6 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using emotitron.Compression.Utilities;
 #endif
 
 namespace emotitron.Compression

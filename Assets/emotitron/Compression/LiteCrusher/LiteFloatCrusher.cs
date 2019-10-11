@@ -1,9 +1,9 @@
 ﻿using System;
 using UnityEngine;
+using emotitron.Compression.Utilities;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using emotitron.Compression.Utilities;
 #endif
 
 namespace emotitron.Compression
