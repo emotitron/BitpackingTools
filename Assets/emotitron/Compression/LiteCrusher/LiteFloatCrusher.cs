@@ -165,6 +165,11 @@ namespace emotitron.Compression
 			}
 
 		}
+
+		public override string ToString()
+		{
+			return GetType().Name + " " + compressType + " mn: " + min + " mx: " + max + " e: " + encoder + " d: " + decoder;
+		}
 	}
 
 #if UNITY_EDITOR

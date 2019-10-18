@@ -250,6 +250,24 @@ namespace emotitron.Compression
 			return zagzig;
 		}
 
+		/// <summary>
+		/// EXPERIMENTAL: Primary Write signed value as PackedByte. 
+		/// </summary>
+		public static void WriteSignedPackedBytes64(this byte[] buffer, long value, ref int bitposition, int bits)
+		{
+			ulong zig = (ulong)((value << 1) ^ (value >> 63));
+			buffer.WritePackedBytes(zig, ref bitposition, bits);
+		}
+		/// <summary>
+		/// EXPERIMENTAL: Read signed value from PackedByte. 
+		/// </summary>
+		public static long ReadSignedPackedBytes64(this byte[] buffer, ref int bitposition, int bits)
+		{
+			ulong zig = buffer.ReadPackedBytes(ref bitposition, bits);
+			long zag = (long)((long)(zig >> 1) ^ (-(long)(zig & 1)));
+			return zag;
+		}
+
 		#endregion
 	}
 }

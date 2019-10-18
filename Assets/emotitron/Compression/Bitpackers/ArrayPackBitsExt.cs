@@ -68,7 +68,7 @@ namespace emotitron.Compression
 
 			//UnityEngine.Debug.Log("Write ulong[] PBits " + value + " = " + sizebits + " : " + valuebits);
 		}
-		
+
 		/// <summary>
 		/// EXPERIMENTAL: Primary WritePacked Method
 		/// </summary>
@@ -256,8 +256,28 @@ namespace emotitron.Compression
 			return zagzig;
 		}
 
-		#endregion
 
+		/// <summary>
+		/// EXPERIMENTAL: Primary Write packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static void WriteSignedPackedBits64(this byte[] buffer, long value, ref int bitposition, int bits)
+		{
+			ulong zig = (ulong)((value << 1) ^ (value >> 63));
+			buffer.WritePackedBits(zig, ref bitposition, bits);
+		}
+		/// <summary>
+		/// EXPERIMENTAL: Primary Read packed signed value. ZigZag is employed to move the sign to the rightmost position.
+		/// Packed values work best for serializing fields that have a large possible range, but are mostly hover closer to zero in value.
+		/// </summary>
+		public static long ReadSignedPackedBits64(this byte[] buffer, ref int bitposition, int bits)
+		{
+			ulong zig = buffer.ReadPackedBits(ref bitposition, bits);
+			long zag = (long)((long)(zig >> 1) ^ (-(long)(zig & 1)));
+			return zag;
+		}
+
+		#endregion
 	}
 }
 

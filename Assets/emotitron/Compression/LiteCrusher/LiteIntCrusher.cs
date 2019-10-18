@@ -150,6 +150,11 @@ namespace emotitron.Compression
 			range = biggest - smallest;
 			bits = GetBitsForMaxValue((uint)range);
 		}
+
+		public override string ToString()
+		{
+			return GetType().Name + " " + compressType + " mn: " + min + " mx: " + max + " sm: " + smallest;
+		}
 	}
 
 #if UNITY_EDITOR
