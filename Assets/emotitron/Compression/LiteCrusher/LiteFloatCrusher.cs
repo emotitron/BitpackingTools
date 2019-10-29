@@ -6,6 +6,7 @@ using emotitron.Compression.Utilities;
 using UnityEditor;
 #endif
 
+
 namespace emotitron.Compression
 {
 
@@ -74,7 +75,7 @@ namespace emotitron.Compression
 				return ((ByteConverter)val).uint32;
 
 			/// Before casting check that the encoded float isn't negative.
-			/// If negative, clamp to zero.
+			/// If negative, clamp to zero. .5f is used to round up 50% of of a quantized value.
 			float encval = ((val - min) * encoder + .5f);
 			if (encval < 0)
 				return 0;
@@ -206,12 +207,12 @@ namespace emotitron.Compression
 			EditorGUI.PropertyField(rectBits, compressType, GUIContent.none);
 			if (compressType.intValue != (int)LiteFloatCompressType.Half16 && compressType.intValue != (int)LiteFloatCompressType.Full32)
 			{
-				EditorGUI.LabelField(new Rect(rectMin) { width = mLabelWidth }, "min", (GUIStyle)"MiniLabelRight");
+				EditorGUI.LabelField(new Rect(rectMin) { width = mLabelWidth }, "min", new GUIStyle("MiniLabel") { alignment = TextAnchor.UpperRight });
 				EditorGUI.PropertyField(new Rect(rectMin) { xMin = rectMin.xMin + mLabelWidth }, min, GUIContent.none);
-				EditorGUI.LabelField(new Rect(rectMax) { width = mLabelWidth }, "max", (GUIStyle)"MiniLabelRight");
+				EditorGUI.LabelField(new Rect(rectMax) { width = mLabelWidth }, "max", new GUIStyle("MiniLabel") { alignment = TextAnchor.UpperRight });
 				EditorGUI.PropertyField(new Rect(rectMax) { xMin = rectMax.xMin + mLabelWidth }, max, GUIContent.none);
 
-				EditorGUI.LabelField(racl, accCenterLabel, (GUIStyle)"MiniLabelRight");
+				EditorGUI.LabelField(racl, accCenterLabel, new GUIStyle("MiniLabel") { alignment = TextAnchor.UpperRight });
 				ac.boolValue = EditorGUI.Toggle(racc, GUIContent.none, ac.boolValue, (GUIStyle)"OL Toggle");
 			}
 

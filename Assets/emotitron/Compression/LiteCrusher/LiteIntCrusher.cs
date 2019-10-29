@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using emotitron.Compression.Utilities;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -174,7 +175,7 @@ namespace emotitron.Compression
 			float compTypeWidth = 100;
 			float stretchleft = r.xMin + compTypeWidth;
 			float mLabelWidth = 26;
-			
+
 			Rect rectBits = new Rect(r) { xMax = stretchleft };
 
 			Rect rectStretch = new Rect(r) { xMin = stretchleft, xMax = r.xMax };
@@ -182,12 +183,12 @@ namespace emotitron.Compression
 			Rect rectMax = new Rect(rectStretch) { xMin = rectStretch.xMin + rectStretch.width * .5f };
 
 			EditorGUI.BeginChangeCheck();
-			EditorGUI.PropertyField(rectBits,  compType, GUIContent.none);
+			EditorGUI.PropertyField(rectBits, compType, GUIContent.none);
 			if (compType.intValue == (int)LiteIntCompressType.Range)
 			{
-				EditorGUI.LabelField(new Rect(rectMin) { width = mLabelWidth }, "min", (GUIStyle)"MiniLabelRight");
+				EditorGUI.LabelField(new Rect(rectMin) { width = mLabelWidth }, "min", new GUIStyle("MiniLabel") { alignment = TextAnchor.UpperRight });
 				EditorGUI.PropertyField(new Rect(rectMin) { xMin = rectMin.xMin + mLabelWidth }, min, GUIContent.none);
-				EditorGUI.LabelField(new Rect(rectMax) { width = mLabelWidth }, "max", (GUIStyle)"MiniLabelRight");
+				EditorGUI.LabelField(new Rect(rectMax) { width = mLabelWidth }, "max", new GUIStyle("MiniLabel") { alignment = TextAnchor.UpperRight });
 				EditorGUI.PropertyField(new Rect(rectMax) { xMin = rectMax.xMin + mLabelWidth }, max, GUIContent.none);
 			}
 
