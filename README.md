@@ -69,7 +69,7 @@ Similar to _Write()_, this method Appends the least significant ``bits`` of the 
 value.Add(buffer, ref int bitposition, int bits)
 ```
 Same as _Append()_, but with a different order of arguments.
-Appends the least significant ''bits'' of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the bitposition is not preserved, so this is only mean for faster sequential writes.
+Appends the least significant ''bits'' of the ``value`` to the ``buffer`` starting at the ``bitposition``. The ``bitposition`` is incremented by ``bits``. Existing data past the bitposition is not preserved, so this is only good for faster sequential writes, and should not be used for injecting data into a stream.
 
 ### Peek
 ```cs
