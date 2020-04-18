@@ -36,7 +36,7 @@ namespace emotitron.Compression
 	/// </summary>
 	public static class ArraySerializeExt
 	{
-		private const string bufferOverrunMsg = "Byte buffer overrun. Dataloss will occur.";
+		private const string bufferOverrunMsg = "Byte buffer length exceeded by write or read. Dataloss will occur. Likely due to a Read/Write mismatch.";
 
 		#region Zero
 
@@ -389,7 +389,8 @@ namespace emotitron.Compression
 			const int MODULUS = MAXBITS - 1;
 			int offset = bitposition & MODULUS;
 			int index = bitposition >> 3;
-			
+			int totalpush = offset + bits;
+
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong offsetmask = mask << offset;
 			ulong offsetcomp = value << offset;
@@ -397,18 +398,20 @@ namespace emotitron.Compression
 			buffer[index] = (byte)((buffer[index] & ~offsetmask) | (offsetcomp & offsetmask));
 
 			offset = MAXBITS - offset;
+			totalpush = totalpush - MAXBITS;
 
 			// These are complete overwrites of the array element, so no masking is required
-			while (offset < (bits-8))
+			while (totalpush > MAXBITS)
 			{
 				index++;
 				offsetcomp = value >> offset;
 				buffer[index] = (byte)offsetcomp;
 				offset += MAXBITS;
+				totalpush = totalpush - MAXBITS;
 			}
 
 			// remaning partial write needs masking
-			if (offset != bits)
+			if (totalpush > 0)
 			{
 				index++;
 
@@ -428,7 +431,7 @@ namespace emotitron.Compression
 			const int MODULUS = MAXBITS - 1;
 			int offset = bitposition & MODULUS;
 			int index = bitposition >> 5;
-			
+			int totalpush = offset + bits;
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong offsetmask = mask << offset;
@@ -437,14 +440,16 @@ namespace emotitron.Compression
 			buffer[index] = (uint)((buffer[index] & ~offsetmask) | (offsetval & offsetmask));
 
 			offset = MAXBITS - offset;
+			totalpush = totalpush - MAXBITS;
 
-			while (offset < bits)
+			while (totalpush > MAXBITS)
 			{
 				index++;
 				offsetmask = mask >> offset;
 				offsetval = value >> offset;
 				buffer[index] = (uint)((buffer[index] & ~offsetmask) | (offsetval & offsetmask));
 				offset += MAXBITS;
+				totalpush = totalpush - MAXBITS;
 			}
 			bitposition += bits;
 		}
@@ -458,6 +463,7 @@ namespace emotitron.Compression
 			const int MODULUS = MAXBITS - 1;
 			int offset = bitposition & MODULUS;
 			int index = bitposition >> 6;
+			int totalpush = offset + bits;
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong offsetmask = mask << offset;
@@ -466,14 +472,16 @@ namespace emotitron.Compression
 			buffer[index] = (buffer[index] & ~offsetmask) | (offsetval & offsetmask);
 
 			offset = MAXBITS - offset;
+			totalpush = totalpush - MAXBITS;
 
-			while (offset < bits)
+			while (totalpush > MAXBITS)
 			{
 				index++;
 				offsetmask = mask >> offset;
 				offsetval = value >> offset;
 				buffer[index] = (buffer[index] & ~offsetmask) | (offsetval & offsetmask);
 				offset += MAXBITS;
+				totalpush = totalpush - MAXBITS;
 			}
 			bitposition += bits;
 		}
@@ -516,7 +524,10 @@ namespace emotitron.Compression
 			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 3;
 
-			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+#if UNITY_EDITOR || DEVELOPEMENT_BUILD
+			if ((bitposition + bits) > (buffer.Length << 3))
+				UnityEngine.Debug.LogError(bufferOverrunMsg);
+#endif
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong value = (ulong)buffer[index] >> offset;
@@ -549,7 +560,10 @@ namespace emotitron.Compression
 			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 5;
 
-			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+#if UNITY_EDITOR || DEVELOPEMENT_BUILD
+			if ((bitposition + bits) > (buffer.Length << 3))
+				UnityEngine.Debug.LogError(bufferOverrunMsg);
+#endif
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong value = (ulong)buffer[index] >> offset;
@@ -581,7 +595,10 @@ namespace emotitron.Compression
 			int offset = bitposition & MODULUS; // this is just a modulus
 			int index = bitposition >> 6;
 
-			//System.Diagnostics.Debug.Assert(endpos <= (buffer.Length << 3), bufferOverrunMsg);
+#if UNITY_EDITOR || DEVELOPEMENT_BUILD
+			if ((bitposition + bits) > (buffer.Length << 3))
+				UnityEngine.Debug.LogError(bufferOverrunMsg);
+#endif
 
 			ulong mask = ulong.MaxValue >> (64 - bits);
 			ulong value = (ulong)buffer[index] >> offset;
@@ -600,7 +617,7 @@ namespace emotitron.Compression
 		#endregion
 
 		#region Secondary Readers
-		
+
 		// Ulong
 		[System.Obsolete("Just use Read(), it return a ulong already.")]
 		public static ulong ReadUInt64(this byte[] buffer, ref int bitposition, int bits = 64)
@@ -755,7 +772,6 @@ namespace emotitron.Compression
 
 				remaining -= cnt;
 			}
-			bitposition += bits;
 		}
 
 		/// <summary>
@@ -784,7 +800,6 @@ namespace emotitron.Compression
 
 				remaining -= cnt;
 			}
-			bitposition += bits;
 		}
 
 		/// <summary>
@@ -813,7 +828,6 @@ namespace emotitron.Compression
 
 				remaining -= cnt;
 			}
-			bitposition += bits;
 		}
 
 		#endregion
@@ -1036,7 +1050,6 @@ namespace emotitron.Compression
 
 				remaining -= cnt;
 			}
-			bitposition += bits;
 		}
 
 		#endregion
