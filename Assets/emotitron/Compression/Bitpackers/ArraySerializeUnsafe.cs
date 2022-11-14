@@ -289,7 +289,13 @@ namespace emotitron.Compression
 			ulong mask = ulong.MaxValue >> (64 - bits);
 
 			ulong value = uPtr[index] >> offset;
-			value |= uPtr[index + 1] << (MAXBITS - offset);
+			offset = MAXBITS - offset;
+			while (offset < bits)
+			{
+				index++;
+				value  |= uPtr[index] << offset;
+        			offset += MAXBITS;
+			}
 
 			bitposition += bits;
 			return value & mask;
@@ -317,8 +323,15 @@ namespace emotitron.Compression
 			ulong mask = ulong.MaxValue >> (64 - bits);
 
 			ulong value = uPtr[index] >> offset;
-			value |= uPtr[index + 1] << (MAXBITS - offset);
+			offset = MAXBITS - offset;
+			while (offset < bits)
+			{
+				index++;
+				value  |= uPtr[index] << offset;
+        			offset += MAXBITS;
+			}
 
+			bitposition += bits;
 			return value & mask;
 		}
 
