@@ -22,6 +22,8 @@
 * THE SOFTWARE.
 */
 
+using System;
+using UnityEngine;
 #if DEVELOPMENT_BUILD
 #define UNITY_ASSERTIONS
 #endif
@@ -326,7 +328,7 @@ namespace emotitron.Compression
 		}
 		/// <summary>
 		/// Faster Primary Write method specifically specifically for sequential writes. 
-		/// Doesn't preserve existing data past the write point in exchnage for a faster write.
+		/// Doesn't preserve existing data past the write point in exchange for a faster write.
 		/// </summary>
 		public static void Append(this uint[] buffer, uint value, ref int bitposition, int bits)
 		{
@@ -381,111 +383,175 @@ namespace emotitron.Compression
 		/// <param name="bits"></param>
 		/// <returns></returns>
 		public static void Write(this byte[] buffer, ulong value, ref int bitposition, int bits)
-		{
-			if (bits == 0)
-				return;
+    {
+      if (bits == 0)
+        return;
 
-			const int MAXBITS = 8;
-			const int MODULUS = MAXBITS - 1;
-			int offset = bitposition & MODULUS;
-			int index = bitposition >> 3;
-			int totalpush = offset + bits;
+      const int MAXBITS = 8;
+      const int MODULUS = MAXBITS - 1;
+      
+      ulong mask = ulong.MaxValue >> (64 - bits);
 
-			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong offsetmask = mask << offset;
-			ulong offsetcomp = value << offset;
+      // Shift the value to the left position, so we can just write everything as if it has 64bits.
+      value <<= (64 - bits);
+      mask  <<= (64 - bits);
+      
+      int index       = bitposition          >> 3;
+      int endIndex    = (bitposition + bits) >> 3;
+      int startOffset = bitposition & MODULUS;
+      
+      // Debug.Log($"{index} -> {endIndex}  -----  str{startOffset} - {(64 - bits) & MODULUS}");
+      
+      int offset = startOffset + MAXBITS * 7;
 
-			buffer[index] = (byte)((buffer[index] & ~offsetmask) | (offsetcomp & offsetmask));
+      while (true) {
 
-			offset = MAXBITS - offset;
-			totalpush = totalpush - MAXBITS;
+        byte offsetMask = (byte)(mask  >> offset);
+        byte offsetVal  = (byte)(value >> offset);
+        buffer[index] = (byte)((buffer[index] & ~offsetMask) | (offsetVal)); 
+        
+        // Debug.Log($"<color=orange>indexes: {index}->{endIndex} val:{value} offset: {offset} --> {offsetVal} : {buffer[index]} </color>");
 
-			// These are complete overwrites of the array element, so no masking is required
-			while (totalpush > MAXBITS)
-			{
-				index++;
-				offsetcomp = value >> offset;
-				buffer[index] = (byte)offsetcomp;
-				offset += MAXBITS;
-				totalpush = totalpush - MAXBITS;
-			}
+        offset -= MAXBITS;
+        index++;
 
-			// remaning partial write needs masking
-			if (totalpush > 0)
-			{
-				index++;
+        if (index > endIndex) {
+          // No need to write to buffer indexes that are beyond the bits of this write.
+          break;
+        }
+        // if (offset < -MAXBITS) {
+        //   // Not sure if this is still needed.
+        //   Debug.LogError($"Yup, this is needed.");
+        //   break;
+        // }
 
-				offsetmask = mask >> offset;
-				offsetcomp = value >> offset;
-				buffer[index] = (byte)((buffer[index] & ~offsetmask) | (offsetcomp & offsetmask));
-			}
-			bitposition += bits;
-		}
+        // Last write may need to push the other direction.
+        if (offset < 0) {
+          offsetMask    = (byte)(mask  << -offset);
+          offsetVal     = (byte)(value << -offset);
+          buffer[index] = (byte)((buffer[index] & ~offsetMask) | offsetVal);
+          // Debug.Log($"<color=yellow>index: {index} offset: {offset} --> {offsetVal} : {buffer[index]}</color>");
 
+          break;
+        }
+      }
+      bitposition += bits;
+    }
+    
 		public static void Write(this uint[] buffer, ulong value, ref int bitposition, int bits)
 		{
-			if (bits == 0)
-				return;
+      if (bits == 0)
+        return;
 
-			const int MAXBITS = 32;
-			const int MODULUS = MAXBITS - 1;
-			int offset = bitposition & MODULUS;
-			int index = bitposition >> 5;
-			int totalpush = offset + bits;
+      const int MAXBITS = 32;
+      const int MODULUS = MAXBITS - 1;
+      
+      ulong mask = ulong.MaxValue >> (64 - bits);
 
-			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong offsetmask = mask << offset;
-			ulong offsetval = value << offset;
+      // Shift the value to the left position, so we can just write everything as if it has 64bits.
+      // This shift also means no masking is required
+      value <<= (64 - bits);
+      mask  <<= (64 - bits);
+      
+      int index       = bitposition >> 5;
+      int endIndex    = (bitposition + bits) >> 5;
+      int startOffset = bitposition          & MODULUS;
+      
+      // Debug.Log($"{index} -> {endIndex}  -----  str{startOffset} - {(64 - bits) & MODULUS}");
+      
+      int offset = startOffset + MAXBITS;
 
-			buffer[index] = (uint)((buffer[index] & ~offsetmask) | (offsetval & offsetmask));
+      while (true) {
 
-			offset = MAXBITS - offset;
-			totalpush = totalpush - MAXBITS;
+        uint offsetMask = (uint)(mask >> offset);
+        var offsetVal  = (uint)(value >> offset);
+        buffer[index] = ((buffer[index] & ~offsetMask) | offsetVal);
+        
+        // Debug.Log($"<color=orange>indexes: {index}->{endIndex} val:{value} offset: {offset} --> {offsetVal} : {buffer[index]} </color>");
 
-			while (totalpush > MAXBITS)
-			{
-				index++;
-				offsetmask = mask >> offset;
-				offsetval = value >> offset;
-				buffer[index] = (uint)((buffer[index] & ~offsetmask) | (offsetval & offsetmask));
-				offset += MAXBITS;
-				totalpush = totalpush - MAXBITS;
-			}
-			bitposition += bits;
-		}
+        offset -= MAXBITS;
+        index++;
 
-		public static void Write(this ulong[] buffer, ulong value, ref int bitposition, int bits)
-		{
-			if (bits == 0)
-				return;
+        if (index > endIndex) {
+          // No need to write to buffer indexes that are beyond the bits of this write.
+          break;
+        }
+        // if (offset < -MAXBITS) {
+        //   // Not sure if this is still needed.
+        //   Debug.LogError($"Yup, this is needed.");
+        //   break;
+        // }
 
-			const int MAXBITS = 64;
-			const int MODULUS = MAXBITS - 1;
-			int offset = bitposition & MODULUS;
-			int index = bitposition >> 6;
-			int totalpush = offset + bits;
+        // Last write may need to push the other direction.
+        if (offset < 0) {
+          offsetMask    = (uint)(mask  << -offset);
+          offsetVal     = (uint)(value << -offset);
+          buffer[index] = (uint)((buffer[index] & ~offsetMask) | offsetVal);
+          // Debug.Log($"<color=yellow>index: {index} offset: {offset} --> {offsetVal} : {buffer[index]}</color>");
 
-			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong offsetmask = mask << offset;
-			ulong offsetval = value << offset;
+          break;
+        }
+      }
+      bitposition += bits;
+    }
 
-			buffer[index] = (buffer[index] & ~offsetmask) | (offsetval & offsetmask);
+    public static void Write(this ulong[] buffer, ulong value, ref int bitposition, int bits)
+    {
+      if (bits == 0)
+        return;
 
-			offset = MAXBITS - offset;
-			totalpush = totalpush - MAXBITS;
+      const int MAXBITS = 64;
+      const int MODULUS = MAXBITS - 1;
+      
+      ulong mask = ulong.MaxValue >> (64 - bits);
 
-			while (totalpush > MAXBITS)
-			{
-				index++;
-				offsetmask = mask >> offset;
-				offsetval = value >> offset;
-				buffer[index] = (buffer[index] & ~offsetmask) | (offsetval & offsetmask);
-				offset += MAXBITS;
-				totalpush = totalpush - MAXBITS;
-			}
-			bitposition += bits;
-		}
+      // Shift the value to the left position, so we can just write everything as if it has 64bits.
+      // This shift also means no masking is required
+      value <<= (64 - bits);
+      mask  <<= (64 - bits);
+      
+      int index       = bitposition          >> 6;
+      int endIndex    = (bitposition + bits) >> 6;
+      int startOffset = bitposition & MODULUS;
+      
+      // Debug.Log($"{index} -> {endIndex}  -----  str{startOffset} - {(64 - bits) & MODULUS}");
+      
+      int offset = startOffset;
 
+      while (true) {
+
+        ulong offsetMask = (ulong)(mask  >> offset);
+        ulong offsetVal  = (ulong)(value >> offset);
+        buffer[index] = ((buffer[index] & ~offsetMask) | offsetVal);
+        
+        // Debug.Log($"<color=orange>indexes: {index}->{endIndex} val:{value} offset: {offset} --> {offsetVal} : {buffer[index]} </color>");
+
+        offset -= MAXBITS;
+        index++;
+
+        if (index > endIndex) {
+          // No need to write to buffer indexes that are beyond the bits of this write.
+          break;
+        }
+        // if (offset < -MAXBITS) {
+        //   // Not sure if this is still needed.
+        //   Debug.LogError($"Yup, this is needed.");
+        //   break;
+        // }
+
+        // Last write may need to push the other direction.
+        if (offset < 0) {
+          offsetMask    = (ulong)(mask  << -offset);
+          offsetVal     = (ulong)(value << -offset);
+          buffer[index] = (ulong)((buffer[index] & ~offsetMask) | offsetVal);
+          // Debug.Log($"<color=yellow>index: {index} offset: {offset} --> {offsetVal} : {buffer[index]}</color>");
+
+          break;
+        }
+      }
+      bitposition += bits;
+    }
+    
 		#endregion
 
 		#region Secondary Writers
@@ -515,33 +581,53 @@ namespace emotitron.Compression
 		/// <param name="bits">The number of bits to read.</param>
 		/// <returns>UInt64 read value. Cast this to the intended type.</returns>
 		public static ulong Read(this byte[] buffer, ref int bitposition, int bits)
-		{
-			if (bits == 0)
-				return 0;
+    {
+      // Debug.Log($"New Read at {bitposition} bits: {bits}");
+      if (bits == 0)
+        return 0;
 
-			const int MAXBITS = 8;
-			const int MODULUS = MAXBITS - 1;
-			int offset = bitposition & MODULUS; // this is just a modulus
-			int index = bitposition >> 3;
+      const int MAXBITS  = 8;
+      const int MODULUS  = MAXBITS - 1;
+      int       index    = bitposition          >> 3;
+      int       endIndex = (bitposition + bits) >> 3;
+      int       offset   =  (bitposition & MODULUS) + MAXBITS * 7;
 
 #if UNITY_EDITOR || DEVELOPEMENT_BUILD
-			if ((bitposition + bits) > (buffer.Length << 3))
-				UnityEngine.Debug.LogError(bufferOverrunMsg);
+      if ((bitposition + bits) > (buffer.Length << 5))
+        UnityEngine.Debug.LogError(bufferOverrunMsg);
 #endif
 
-			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong value = (ulong)buffer[index] >> offset;
-			offset = MAXBITS - offset;
-			while (offset < bits)
-			{
-				index++;
-				value |= (ulong)buffer[index] << offset;
-				offset += MAXBITS;
-			}
+      ulong value = 0;
+      while (true)
+      {
+        value |= ((ulong)buffer[index]) << offset;
+        // Debug.Log($"READ <color=orange>[{index}] endOff:{endOffset} : {buffer[index]} << {offset}</color> value:{value} endAt:{endIndex}");
+        index++;
 
-			bitposition += bits;
-			return value & mask;
-		}
+        if (index > endIndex) {
+          break;
+        }
+        
+        offset -= MAXBITS;
+
+        // if (offset <= -MAXBITS) {
+        //   // Needed?
+        //   Debug.LogError($"Yes this is needed");
+        //   // This happens when the bytes are aligned
+        //   break;
+        // }
+        
+        // An offset less than zero will always be the Last index read
+        if (offset < 0) {
+          // Debug.Log($"READ <color=yellow>[{index}] : {buffer[index]} >> {-offset}</color>");
+          value |= (ulong)buffer[index] >> -offset;
+          break;
+        }
+      }
+      
+      bitposition += bits;
+      return (value) >> (64 - bits);
+    }
 
 		/// <summary>
 		/// This is the Primary uint[].Read() method. All other uint[].ReadXXX methods lead here. For maximum performance use this for all Read() calls and cast accordingly.
@@ -550,32 +636,53 @@ namespace emotitron.Compression
 		/// <param name="bitposition">The position in the array (in bits) where we will begin reading.</param>
 		/// <param name="bits">The number of bits to read.</param>
 		/// <returns>UInt64 read value. Cast this to the intended type.</returns>
-		public static ulong Read(this uint[] buffer, ref int bitposition, int bits)
-		{
-			if (bits == 0)
-				return 0;
+		public static ulong Read(this uint[] buffer, ref int bitposition, int bits) 
+    {
+      // Debug.Log($"New Read at {bitposition} bits: {bits}");
+      if (bits == 0)
+        return 0;
 
-			const int MAXBITS = 32;
-			const int MODULUS = MAXBITS - 1;
-			int offset = bitposition & MODULUS; // this is just a modulus
-			int index = bitposition >> 5;
+      const int MAXBITS   = 32;
+      const int MODULUS   = MAXBITS - 1;
+      int       index     = bitposition          >> 5;
+      int       endIndex  = (bitposition + bits) >> 5;
+      int       offset    =  (bitposition & MODULUS) + MAXBITS;
 
 #if UNITY_EDITOR || DEVELOPEMENT_BUILD
-			if ((bitposition + bits) > (buffer.Length << 3))
-				UnityEngine.Debug.LogError(bufferOverrunMsg);
+      if ((bitposition + bits) > (buffer.Length << 5))
+        UnityEngine.Debug.LogError(bufferOverrunMsg);
 #endif
 
-			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong value = (ulong)buffer[index] >> offset;
-			offset = MAXBITS - offset;
-			while (offset < bits)
-			{
-				index++;
-				value |= (ulong)buffer[index] << offset;
-				offset += MAXBITS;
-			}
-			bitposition += bits;
-			return value & mask;
+      ulong value = 0;
+      while (true)
+      {
+        value |= ((ulong)buffer[index]) << offset;
+         // Debug.Log($"READ <color=orange>[{index}] endOff:{endOffset} : {buffer[index]} << {offset}</color> value:{value} endAt:{endIndex}");
+        index++;
+
+        if (index > endIndex) {
+          break;
+        }
+        
+        offset -= MAXBITS;
+
+        // if (offset <= -MAXBITS) {
+        //   // Needed?
+        //   Debug.LogError($"Yes this is needed");
+        //   // This happens when the bytes are aligned
+        //   break;
+        // }
+        
+        // An offset less than zero will always be the Last index read
+        if (offset < 0) {
+           // Debug.Log($"READ <color=yellow>[{index}] : {buffer[index]} >> {-offset}</color>");
+          value |= (ulong)buffer[index] >> -offset;
+          break;
+        }
+      }
+      
+      bitposition += bits;
+      return (value) >> (64 - bits);
 		}
 
 		/// <summary>
@@ -586,34 +693,54 @@ namespace emotitron.Compression
 		/// <param name="bits">The number of bits to read.</param>
 		/// <returns>UInt64 read value. Cast this to the intended type.</returns>
 		public static ulong Read(this ulong[] buffer, ref int bitposition, int bits)
-		{
-			if (bits == 0)
-				return 0;
+    {
+      // Debug.Log($"New Read at {bitposition} bits: {bits}");
+      if (bits == 0)
+        return 0;
 
-			const int MAXBITS = 64;
-			const int MODULUS = MAXBITS - 1;
-			int offset = bitposition & MODULUS; // this is just a modulus
-			int index = bitposition >> 6;
+      const int MAXBITS  = 64;
+      const int MODULUS  = MAXBITS - 1;
+      int       index    = bitposition          >> 6;
+      int       endIndex = (bitposition + bits) >> 6;
+      int       offset   =  (bitposition & MODULUS);
 
 #if UNITY_EDITOR || DEVELOPEMENT_BUILD
-			if ((bitposition + bits) > (buffer.Length << 3))
-				UnityEngine.Debug.LogError(bufferOverrunMsg);
+      if ((bitposition + bits) > (buffer.Length << 6))
+        UnityEngine.Debug.LogError(bufferOverrunMsg);
 #endif
 
-			ulong mask = ulong.MaxValue >> (64 - bits);
-			ulong value = (ulong)buffer[index] >> offset;
-			offset = MAXBITS - offset;
-			while (offset < bits)
-			{
-				index++;
-				value |= (ulong)buffer[index] << offset;
-				offset += MAXBITS;
-			}
+      ulong value = 0;
+      while (true)
+      {
+        value |= ((ulong)buffer[index]) << offset;
+        // Debug.Log($"READ <color=orange>[{index}] endOff:{endOffset} : {buffer[index]} << {offset}</color> value:{value} endAt:{endIndex}");
+        index++;
 
-			bitposition += bits;
-			return value & mask;
-		}
+        if (index > endIndex) {
+          break;
+        }
+        
+        offset -= MAXBITS;
 
+        // if (offset <= -MAXBITS) {
+        //   // Needed?
+        //   Debug.LogError($"Yes this is needed");
+        //   // This happens when the bytes are aligned
+        //   break;
+        // }
+        
+        // An offset less than zero will always be the Last index read
+        if (offset < 0) {
+          // Debug.Log($"READ <color=yellow>[{index}] : {buffer[index]} >> {-offset}</color>");
+          value |= (ulong)buffer[index] >> -offset;
+          break;
+        }
+      }
+      
+      bitposition += bits;
+      return (value) >> (64 - bits);
+    }
+    
 		#endregion
 
 		#region Secondary Readers

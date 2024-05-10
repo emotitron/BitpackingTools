@@ -43,7 +43,10 @@ namespace emotitron.Compression
 		{
 			if (bits == 0)
 				return;
-
+      
+      // Clear bits in value that are outside of the specified bits (mask)
+      value &= ulong.MaxValue >> 64 - bits;
+      
 			int valuebits = value.UsedBitCount();
 			int sizebits = bits.UsedBitCount();
 			ArraySerializeUnsafe.Write(uPtr, (uint)(valuebits), ref bitposition, sizebits);
@@ -61,6 +64,9 @@ namespace emotitron.Compression
 			if (bits == 0)
 				return;
 
+      // Clear bits in value that are outside of the specified bits (mask)
+      value &= ulong.MaxValue >> 64 - bits;
+      
 			int valuebits = value.UsedBitCount();
 			int sizebits = bits.UsedBitCount();
 			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);
@@ -77,7 +83,10 @@ namespace emotitron.Compression
 		{
 			if (bits == 0)
 				return;
-
+      
+      // Clear bits in value that are outside of the specified bits (mask)
+      value &= ulong.MaxValue >> 64 - bits;
+      
 			int valuebits = value.UsedBitCount();
 			int sizebits = bits.UsedBitCount();
 			buffer.Write((ulong)(valuebits), ref bitposition, (int)sizebits);
@@ -91,6 +100,9 @@ namespace emotitron.Compression
 		/// <param name="countbits"></param>
 		public static void WritePackedBits(this byte[] buffer, ulong value, ref int bitposition, int bits)
 		{
+      // Clear bits in value that are outside of the specified bits (mask)
+      value &= ulong.MaxValue >> 64 - bits;
+      
 			int valuebits = value.UsedBitCount();
 			int sizebits = bits.UsedBitCount();
 			buffer.Write((uint)(valuebits), ref bitposition, (int)sizebits);

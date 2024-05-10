@@ -22,6 +22,9 @@
 * THE SOFTWARE.
 */
 
+using System;
+using System.Runtime.CompilerServices;
+
 namespace emotitron.Compression
 {
 
@@ -51,6 +54,7 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Number of bits used (ie. position of the first non-zero bit from left to right).
 		/// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int UsedBitCount(this ulong val)
 		{
 			val |= val >> 1;
@@ -65,6 +69,7 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Number of bits used (ie. position of the first non-zero bit from left to right).
 		/// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int UsedBitCount(this uint val)
 		{
 			val |= val >> 1;
@@ -79,20 +84,84 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Number of bits used (ie. position of the first non-zero bit from left to right).
 		/// </summary>
-		public static int UsedBitCount(this int val)
-		{
-			val |= val >> 1;
-			val |= val >> 2;
-			val |= val >> 4;
-			val |= val >> 8;
-			val |= val >> 16;
-			//v |= v >> 32;
-			return bitPatternToLog2[((ulong)val * MULTIPLICATOR) >> 57];
-		}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int UsedBitCount(this int val) {
+      
+      val |= val >> 1;
+      val |= val >> 2;
+      val |= val >> 4;
+      val |= val >> 8;
+      val |= val >> 16;
+      //v |= v >> 32;
+      return bitPatternToLog2[((ulong)val * MULTIPLICATOR) >> 57];
+      
+      // Alternative method, not sure which is faster here.
+      
+      // if (val == 0) return 0;
+      //
+      // if ((val & 0xFFFF0000) != 0) {
+      //   if ((val & 0xFF000000) != 0) {
+      //     if ((val & 0xF0000000) != 0) {
+      //       if ((val & 0x80000000) == 0x80000000) return 32;
+      //       if ((val & 0x40000000) == 0x40000000) return 31;
+      //       if ((val & 0x20000000) == 0x20000000) return 30;
+      //       return 29;            
+      //     } else {
+      //       if ((val & 0x08000000) == 0x08000000) return 28;
+      //       if ((val & 0x04000000) == 0x04000000) return 27;
+      //       if ((val & 0x02000000) == 0x02000000) return 26;
+      //       return 25;            
+      //     }
+      //
+      //   } else { // 0x00FF0000
+      //     if ((val & 0x00F00000) != 0) {
+      //       if ((val & 0x00800000) == 0x00800000) return 24;
+      //       if ((val & 0x00400000) == 0x00400000) return 23;
+      //       if ((val & 0x00200000) == 0x00200000) return 22;
+      //       return 21;
+      //     } else {
+      //       if ((val & 0x00080000) == 0x00080000) return 20;
+      //       if ((val & 0x00040000) == 0x00040000) return 19;
+      //       if ((val & 0x00020000) == 0x00020000) return 18;
+      //       return 17;              
+      //     }
+      //   }
+      //
+      // } else {
+      //
+      //   if ((val & 0x0000FF00) != 0) {
+      //     if ((val & 0x0000F000) != 0) {
+      //       if ((val & 0x00008000) == 0x00008000) return 16;
+      //       if ((val & 0x00004000) == 0x00004000) return 15;
+      //       if ((val & 0x00002000) == 0x00002000) return 14;
+      //       return 13;            
+      //     } else {
+      //       if ((val & 0x00000800) == 0x00000800) return 12;
+      //       if ((val & 0x00000400) == 0x00000400) return 11;
+      //       if ((val & 0x00000200) == 0x00000200) return 10;
+      //       return 09;              
+      //     }
+      //   
+      //   } else { // 0x000000FF
+      //     if ((val & 0x000000F0) != 0) {
+      //       if ((val & 0x00000080) == 0x00000080) return 08;
+      //       if ((val & 0x00000040) == 0x00000040) return 07;
+      //       if ((val & 0x00000020) == 0x00000020) return 06;
+      //       return 05;            
+      //     } else {
+      //       if ((val & 0x00000008) == 0x00000008) return 04;
+      //       if ((val & 0x00000004) == 0x00000004) return 03;
+      //       if ((val & 0x00000002) == 0x00000002) return 02;
+      //       return 01;               
+      //     }
+      //   }
+      // }
+    }
 
 		/// <summary>
 		/// Number of bits used (ie. position of the first non-zero bit from left to right).
 		/// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int UsedBitCount(this ushort val)
 		{
 			uint v = val;
@@ -108,6 +177,7 @@ namespace emotitron.Compression
 		/// <summary>
 		/// Number of bits used (ie. position of the first non-zero bit from left to right).
 		/// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int UsedBitCount(this byte val)
 		{
 			uint v = val;
@@ -124,76 +194,46 @@ namespace emotitron.Compression
 
 		#region Count Used Bytes Utils
 
-		public static int UsedByteCount(this ulong val)
-		{
-			if (val == 0)
-				return 0;
-
-			if ((val & 0x000000FF00000000) != 0)
-			{
-				if ((val & 0x00FF000000000000) != 0)
-				{
-					if ((val & 0xFF00000000000000) != 0)
-						return 8;
-					else
-						return 7;
-				}
-				else
-				{
-					if ((val & 0x0000FF0000000000) != 0)
-						return 6;
-					else
-						return 5;
-				}
-			}
-			else
-			{
-				if ((val & 0x0000000000FF0000) != 0)
-				{
-					if ((val & 0x00000000FF000000) != 0)
-						return 4;
-					else
-						return 3;
-				}
-				else
-				{
-					if ((val & 0x000000000000FF00) != 0)
-						return 2;
-					else
-						return 1;
-				}
-			}
-		}
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int UsedByteCount(this ulong val) {
+      if (val == 0) return 0;
+      
+      if ((val & 0xFFFFFFFF00000000) != 0) {
+        // one of the left 4 was used
+        if ((val & 0xFFFF000000000000) != 0) {
+          return ((val & 0xFF00000000000000) != 0) ? 8 : 7;
+        } else {
+          return ((val & 0x0000FF0000000000) != 0) ? 6 : 5;
+        }
+        
+      } else {
+        // None of the left 4 were used
+        if ((val & 0x00000000FFFF0000) != 0) {
+          return ((val & 0x00000000FF000000) != 0) ? 4 : 3;
+        } else {
+          return ((val & 0x000000000000FF00) != 0) ? 2 : 1;
+        }
+      }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int UsedByteCount(this uint val)
-		{
-			if (val == 0)
-				return 0;
+    {
+      if (val == 0) return 0;
+      
+      // None of the left 4 were used
+      if ((val & 0xFFFF0000) != 0) {
+        return ((val & 0xFF000000) != 0) ? 4 : 3;
+      } else {
+        return ((val & 0x0000FF00) != 0) ? 2 : 1;
+      }
+    }
 
-			if ((val & 0x00FF0000) != 0)
-			{
-				if ((val & 0xFF000000) != 0)
-					return 4;
-				return 3;
-			}
-			else
-			{
-				if ((val & 0x0000FF00) != 0)
-					return 2;
-				else
-					return 1;
-			}
-		}
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int UsedByteCount(this ushort val)
 		{
-			if (val == 0)
-				return 0;
-
-			if ((val & 0xFF00) != 0)
-				return 2;
-			else
-				return 1;
+      if (val == 0) return 0;
+      return ((val & 0xFF00) != 0) ? 2 : 1;
 		}
 		#endregion
 	}

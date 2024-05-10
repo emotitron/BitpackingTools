@@ -62,12 +62,17 @@ namespace emotitron.Compression
 			if (bits == 0)
 				return;
 
+      // Clear bits in value that are outside of the specified bits (mask)
+      value &= ulong.MaxValue >> 64 - bits;
+      
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
 			int valuebytes = value.UsedByteCount();
 
 			buffer.Write((uint)(valuebytes), ref bitposition, (int)sizebits);
 			buffer.Write(value, ref bitposition, valuebytes << 3);
+
+      // Debug.Log($"Used Bytes in {value} : {valuebytes << 3} -- pos after write {bitposition} - sizerSize:{sizebits}");
 
 			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
 			//	" = [" + (int)sizebits + " : " + (valuebytes << 3) + "]  total bits: " + ((int)sizebits + (valuebytes << 3)));
@@ -79,7 +84,9 @@ namespace emotitron.Compression
 		{
 			if (bits == 0)
 				return;
-
+      // Clear bits in value that are outside of the specified bits (mask)
+      value &= ulong.MaxValue >> 64 - bits;
+      
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
 			int valuebytes = value.UsedByteCount();
@@ -97,7 +104,10 @@ namespace emotitron.Compression
 		{
 			if (bits == 0)
 				return;
-
+      
+      // Clear bits in value that are outside of the specified bits (mask)
+      value &= ulong.MaxValue >> 64 - bits;
+      
 			int bytes = (bits + 7) >> 3;
 			int sizebits = bytes.UsedBitCount();
 			int valuebytes = value.UsedByteCount();
@@ -105,7 +115,9 @@ namespace emotitron.Compression
 			buffer.Write((uint)(valuebytes), ref bitposition, sizebits);
 			buffer.Write(value, ref bitposition, valuebytes << 3);
 
-			//UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
+      // UnityEngine.Debug.Log($"Used Bytes in {value} : size(B): {valuebytes} -- pos after write {bitposition} - bytes:{bytes} sizerSize:{sizebits}");
+			
+      //UnityEngine.Debug.Log(value + " buff:" + buffer + "bytes " + bytes +
 			//	" = [" + (int)sizebits + " : " + (valuebits << 3) + "]  total bits: " + ((int)sizebits + (valuebits << 3)));
 		}
 
@@ -134,10 +146,13 @@ namespace emotitron.Compression
 			if (bits == 0)
 				return 0;
 
-			int bytes = (bits + 7) >> 3;
-			int sizebits = bytes.UsedBitCount();
+			int bytes     = (bits + 7) >> 3;
+			int sizebits  = bytes.UsedBitCount();
 			int valuebits = (int)buffer.Read(ref bitposition, sizebits) << 3;
-			return buffer.Read(ref bitposition, valuebits);
+      
+      var val       = buffer.Read(ref bitposition, valuebits);
+      // Debug.Log($"READ {val} Used Bytes : {valuebits} -- pos after read {bitposition} - siderSize:{sizebits}");
+			return val;
 		}
 		/// <summary>
 		/// Primary Reader for PackedBytes.
@@ -160,11 +175,14 @@ namespace emotitron.Compression
 			if (bits == 0)
 				return 0;
 
-			int bytes = (bits + 7) >> 3;
-			int sizebits = bytes.UsedBitCount();
+			int bytes     = (bits + 7) >> 3;
+			int sizebits  = bytes.UsedBitCount();
 			int valuebits = (int)buffer.Read(ref bitposition, sizebits) << 3;
-			return buffer.Read(ref bitposition, valuebits);
-		}
+      var val       = buffer.Read(ref bitposition, valuebits);
+      // UnityEngine.Debug.Log($"READ {val} Used Bytes : {valuebits} -- pos after read {bitposition} - siderSize:{sizebits}");
+      return val;
+
+    }
 
 		#endregion
 
